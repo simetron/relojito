@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Edit Timer - Momentum</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#f8f9fa",
+                    "on-secondary-fixed": "#07006c",
+                    "primary-container": "#3e4c67",
+                    "tertiary-container": "#5e4821",
+                    "on-secondary-container": "#fffbff",
+                    "on-tertiary-fixed-variant": "#59431d",
+                    "on-tertiary-container": "#d6b887",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed-dim": "#c0c1ff",
+                    "tertiary-fixed": "#ffdeaa",
+                    "on-tertiary-fixed": "#271900",
+                    "background": "#f8f9fa",
+                    "on-surface": "#191c1d",
+                    "surface": "#f8f9fa",
+                    "on-primary-fixed-variant": "#394762",
+                    "tertiary": "#45320c",
+                    "inverse-surface": "#2e3132",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed": "#d7e3ff",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface-tint": "#515f7a",
+                    "on-surface-variant": "#44474d",
+                    "surface-container": "#edeeef",
+                    "on-error": "#ffffff",
+                    "surface-variant": "#e1e3e4",
+                    "surface-container-low": "#f3f4f5",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed": "#e1e0ff",
+                    "surface-container-high": "#e7e8e9",
+                    "on-secondary-fixed-variant": "#2f2ebe",
+                    "primary": "#27354f",
+                    "on-primary-fixed": "#0c1b34",
+                    "on-background": "#191c1d",
+                    "on-primary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "secondary-container": "#6063ee",
+                    "outline-variant": "#c5c6ce",
+                    "outline": "#75777e",
+                    "surface-dim": "#d9dadb",
+                    "primary-fixed-dim": "#b8c7e7",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed-dim": "#e1c290",
+                    "on-primary-container": "#aebddd",
+                    "secondary": "#4648d4",
+                    "inverse-primary": "#b8c7e7"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "xl": "40px",
+                    "sm": "8px",
+                    "gutter": "24px",
+                    "unit": "4px",
+                    "margin": "32px",
+                    "md": "16px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Inter"],
+                    "h3": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "h1": ["Inter"],
+                    "h2": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "h3": ["18px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "body-lg": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                    "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .thin-border {
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased">
+<!-- TopAppBar (Transactional Shell Logic: No Nav, Close Action) -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-6 h-16 max-w-screen-2xl mx-auto bg-white/80 backdrop-blur-md border-b border-slate-200/60">
+<div class="flex items-center gap-4">
+<h1 class="font-h2 text-h2 tracking-tight text-slate-900">Edit Timer</h1>
+</div>
+<div class="flex items-center gap-3">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-50 transition-colors active:scale-95 duration-150 text-slate-700">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-[800px] mx-auto min-h-screen">
+<div class="space-y-xl">
+<!-- Hero Preview Card (Asymmetric Layout) -->
+<section class="flex flex-col items-center text-center space-y-lg">
+<div class="flex justify-center">
+<div class="w-24 h-24 rounded-2xl bg-secondary-container flex items-center justify-center text-white shadow-lg">
+<span class="material-symbols-outlined !text-4xl" data-icon="timer">timer</span>
+</div>
+</div>
+</section>
+<!-- Form Section -->
+<section class="space-y-lg">
+<!-- Activity Name -->
+<div class="space-y-sm">
+<label class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Name</label>
+<input class="w-full px-lg py-md bg-white border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all font-body-lg text-slate-900 placeholder-slate-400" type="text" value="Deep Work Session"/>
+</div>
+<!-- Color Selection (Horizontal Picker) -->
+<div class="space-y-sm">
+<label class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Color</label>
+<div class="flex flex-wrap gap-md py-xs"><button class="w-10 h-10 rounded-full bg-[#5850EC] ring-2 ring-offset-2 ring-secondary transition-transform hover:scale-110 active:scale-90"></button>
+<button class="w-10 h-10 rounded-full bg-[#5F4B1B] ring-offset-2 hover:ring-2 hover:ring-slate-300 transition-transform hover:scale-110 active:scale-90"></button>
+<button class="w-10 h-10 rounded-full bg-[#F94144] ring-offset-2 hover:ring-2 hover:ring-slate-300 transition-transform hover:scale-110 active:scale-90"></button>
+<button class="w-10 h-10 rounded-full bg-[#10B981] ring-offset-2 hover:ring-2 hover:ring-slate-300 transition-transform hover:scale-110 active:scale-90"></button>
+<button class="w-10 h-10 rounded-full bg-[#F59E0B] ring-offset-2 hover:ring-2 hover:ring-slate-300 transition-transform hover:scale-110 active:scale-90"></button>
+<button class="w-10 h-10 rounded-full bg-[#8B5CF6] ring-offset-2 hover:ring-2 hover:ring-slate-300 transition-transform hover:scale-110 active:scale-90"></button>
+<button class="w-10 h-10 rounded-full bg-[#0EA5E9] ring-offset-2 hover:ring-2 hover:ring-slate-300 transition-transform hover:scale-110 active:scale-90"></button>
+<button class="w-10 h-10 rounded-full bg-slate-100 ring-offset-2 hover:ring-2 hover:ring-slate-300 transition-transform hover:scale-110 active:scale-90 flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-500 text-sm" data-icon="add">add</span>
+</button></div>
+</div>
+<!-- Icon Picker (Grid) -->
+<div class="space-y-sm">
+<label class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Icon</label>
+<div class="grid grid-cols-5 sm:grid-cols-8 gap-sm rounded-xl">
+<button class="aspect-square flex items-center justify-center rounded-lg text-secondary hover:bg-slate-50 transition-colors bg-secondary/10">
+<span class="material-symbols-outlined" data-icon="timer" style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;">timer</span>
+</button>
+<button class="aspect-square flex items-center justify-center rounded-lg hover:bg-white hover:thin-border text-slate-500 hover:text-slate-800 transition-colors">
+<span class="material-symbols-outlined" data-icon="book">book</span>
+</button>
+<button class="aspect-square flex items-center justify-center rounded-lg hover:bg-white hover:thin-border text-slate-500 hover:text-slate-800 transition-colors">
+<span class="material-symbols-outlined" data-icon="fitness_center">fitness_center</span>
+</button>
+<button class="aspect-square flex items-center justify-center rounded-lg hover:bg-white hover:thin-border text-slate-500 hover:text-slate-800 transition-colors">
+<span class="material-symbols-outlined" data-icon="code">code</span>
+</button>
+<button class="aspect-square flex items-center justify-center rounded-lg hover:bg-white hover:thin-border text-slate-500 hover:text-slate-800 transition-colors">
+<span class="material-symbols-outlined" data-icon="brush">brush</span>
+</button>
+<button class="aspect-square flex items-center justify-center rounded-lg hover:bg-white hover:thin-border text-slate-500 hover:text-slate-800 transition-colors">
+<span class="material-symbols-outlined" data-icon="laptop_mac">laptop_mac</span>
+</button>
+<button class="aspect-square flex items-center justify-center rounded-lg hover:bg-white hover:thin-border text-slate-500 hover:text-slate-800 transition-colors">
+<span class="material-symbols-outlined" data-icon="self_improvement">self_improvement</span>
+</button>
+<button class="aspect-square flex items-center justify-center rounded-lg hover:bg-white hover:thin-border text-slate-500 hover:text-slate-800 transition-colors">
+<span class="material-symbols-outlined" data-icon="coffee">coffee</span>
+</button>
+<button class="aspect-square flex items-center justify-center rounded-lg hover:bg-white hover:thin-border text-slate-500 hover:text-slate-800 transition-colors">
+<span class="material-symbols-outlined" data-icon="bedtime">bedtime</span>
+</button>
+<button class="aspect-square flex items-center justify-center rounded-lg hover:bg-white hover:thin-border text-slate-500 hover:text-slate-800 transition-colors">
+<span class="material-symbols-outlined" data-icon="headphones">headphones</span>
+</button>
+</div>
+</div>
+<!-- Settings Card (Glassmorphism Detail) -->
+</section>
+</div>
+</main>
+<!-- Fixed Bottom Actions -->
+<footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 h-24 px-6 flex items-center justify-center z-50">
+<div class="w-full max-w-[800px] flex items-center justify-between gap-lg gap-md"><button class="flex-1 flex items-center justify-center gap-sm px-md py-md text-error hover:bg-error-container/20 rounded-lg transition-colors active:scale-95 duration-150 font-medium">
+<span class="material-symbols-outlined" data-icon="delete">delete</span>
+    Delete
+</button>
+<button class="flex-1 px-md py-md text-slate-600 font-medium hover:bg-slate-50 rounded-lg transition-colors active:scale-95 duration-150 text-center">
+    Cancel
+</button>
+<button class="flex-1 h-14 bg-secondary text-white font-body-lg text-body-lg font-semibold rounded-xl active:scale-[0.98] transition-all shadow-lg shadow-secondary/20 flex items-center justify-center gap-2">
+    Save
+</button></div>
+</footer>
+</body></html>

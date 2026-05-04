@@ -1,0 +1,218 @@
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+export const ALLOWED_COLORS = [
+  '#5850EC', // Indigo
+  '#5F4B1B', // Brown
+  '#F94144', // Red
+  '#10B981', // Green
+  '#F59E0B', // Amber
+  '#8B5CF6', // Purple
+  '#0EA5E9', // Sky
+] as const
+
+export const ALLOWED_ICONS = [
+  'person-running',
+  'book-open',
+  'person-praying',
+  'dumbbell',
+  'code',
+  'headphones',
+  'mug-saucer',
+  'paintbrush',
+  'moon',
+  'briefcase',
+  'music',
+  'pen-to-square',
+] as const
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export type TimerActionResult =
+  | { success: true; error?: never }
+  | { success?: never; error: string }
+
+export interface Timer {
+  id: string
+  name: string
+  color: string
+  icon: string
+}
+
+// ─── createTimer ──────────────────────────────────────────────────────────────
+
+export async function createTimer(
+  _prevState: TimerActionResult | null,
+  formData: FormData
+): Promise<TimerActionResult> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  const rawName = formData.get('name')
+  const color = formData.get('color') as string
+  const icon = formData.get('icon') as string
+
+  // Validate name
+  const name = typeof rawName === 'string' ? rawName.trim() : ''
+  if (!name || name.length < 1) {
+    return { error: 'Name is required.' }
+  }
+  if (name.length > 32) {
+    return { error: 'Name must be 32 characters or fewer.' }
+  }
+
+  // Validate color
+  if (!ALLOWED_COLORS.includes(color as (typeof ALLOWED_COLORS)[number])) {
+    return { error: 'Please select a valid color.' }
+  }
+
+  // Validate icon
+  if (!ALLOWED_ICONS.includes(icon as (typeof ALLOWED_ICONS)[number])) {
+    return { error: 'Please select a valid icon.' }
+  }
+
+  const { error: dbError } = await supabase.from('timers').insert({
+    user_id: user.id,
+    name,
+    color,
+    icon,
+    position: 0,
+  })
+
+  if (dbError) {
+    // Unique constraint violation — duplicate name
+    if (dbError.code === '23505') {
+      return { error: `A timer named "${name}" already exists.` }
+    }
+    return { error: 'Failed to create timer. Please try again.' }
+  }
+
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+// ─── updateTimer ──────────────────────────────────────────────────────────────
+
+export async function updateTimer(
+  _prevState: TimerActionResult | null,
+  formData: FormData
+): Promise<TimerActionResult> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  const timerId = formData.get('timerId') as string
+  const rawName = formData.get('name')
+  const color = formData.get('color') as string
+  const icon = formData.get('icon') as string
+
+  if (!timerId) {
+    return { error: 'Timer ID is required.' }
+  }
+
+  // Validate name
+  const name = typeof rawName === 'string' ? rawName.trim() : ''
+  if (!name || name.length < 1) {
+    return { error: 'Name is required.' }
+  }
+  if (name.length > 32) {
+    return { error: 'Name must be 32 characters or fewer.' }
+  }
+
+  // Validate color
+  if (!ALLOWED_COLORS.includes(color as (typeof ALLOWED_COLORS)[number])) {
+    return { error: 'Please select a valid color.' }
+  }
+
+  // Validate icon
+  if (!ALLOWED_ICONS.includes(icon as (typeof ALLOWED_ICONS)[number])) {
+    return { error: 'Please select a valid icon.' }
+  }
+
+  const { error: dbError } = await supabase
+    .from('timers')
+    .update({ name, color, icon, updated_at: new Date().toISOString() })
+    .eq('id', timerId)
+    .eq('user_id', user.id)
+
+  if (dbError) {
+    if (dbError.code === '23505') {
+      return { error: `A timer named "${name}" already exists.` }
+    }
+    return { error: 'Failed to update timer. Please try again.' }
+  }
+
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+// ─── getUserTimers ────────────────────────────────────────────────────────────
+
+/**
+ * Returns all timers belonging to the authenticated user.
+ * Used to populate the timer selector in modals.
+ */
+export async function getUserTimers(): Promise<{ timers: Timer[]; error?: string }> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { timers: [], error: 'Not authenticated' }
+  }
+
+  const { data, error } = await supabase
+    .from('timers')
+    .select('id, name, color, icon')
+    .eq('user_id', user.id)
+    .order('position', { ascending: true })
+
+  if (error) {
+    return { timers: [], error: 'Failed to fetch timers.' }
+  }
+
+  return { timers: (data ?? []) as Timer[] }
+}
+
+// ─── deleteTimer ──────────────────────────────────────────────────────────────
+
+export async function deleteTimer(timerId: string): Promise<void> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
+  await supabase
+    .from('timers')
+    .delete()
+    .eq('id', timerId)
+    .eq('user_id', user.id)
+
+  revalidatePath('/dashboard')
+  redirect('/dashboard')
+}

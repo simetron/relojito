@@ -1,0 +1,243 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import EditTimerModal from './EditTimerModal'
+import { formatHHMMSS } from '@/lib/utils/time'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface Timer {
+  id: string
+  user_id: string
+  name: string
+  color: string
+  icon: string
+  position: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ActiveSession {
+  id: string
+  start_time: string
+}
+
+interface TimerCardProps {
+  timer: Timer
+  todaySeconds: number
+  onStart: (timer: Timer) => void
+  onStop?: (sessionId: string) => void
+  activeSession?: ActiveSession
+  disabled?: boolean
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Format total seconds as a human-readable "Today: Xm" or "Today: 1h 23m" string.
+ */
+function formatTodayTime(totalSeconds: number): string {
+  if (totalSeconds <= 0) return 'Today: 0m'
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  if (hours > 0 && minutes > 0) return `Today: ${hours}h ${minutes}m`
+  if (hours > 0) return `Today: ${hours}h`
+  return `Today: ${minutes}m`
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export default function TimerCard({
+  timer,
+  todaySeconds,
+  onStart,
+  onStop,
+  activeSession,
+  disabled = false,
+}: TimerCardProps) {
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const isRunning = !!activeSession
+
+  // Set up / tear down the 1-second interval when activeSession changes
+  useEffect(() => {
+    if (activeSession) {
+      const startMs = new Date(activeSession.start_time).getTime()
+
+      // Compute immediately so there's no 1-second blank
+      setElapsed(Math.floor((Date.now() - startMs) / 1000))
+
+      intervalRef.current = setInterval(() => {
+        setElapsed(Math.floor((Date.now() - startMs) / 1000))
+      }, 1000)
+    } else {
+      setElapsed(0)
+    }
+
+    return () => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+  }, [activeSession])
+
+  const handleCardClick = () => {
+    // Don't open edit modal when running or disabled
+    if (isRunning || disabled) return
+    setShowEditModal(true)
+  }
+
+  const handleStartClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (disabled) return
+    onStart(timer)
+  }
+
+  const handleStopClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (activeSession && onStop) {
+      onStop(activeSession.id)
+    }
+  }
+
+  // ── Running state ──────────────────────────────────────────────────────────
+  if (isRunning) {
+    return (
+      <div
+        className="group rounded-xl flex items-center justify-between p-lg transition-all duration-200"
+        style={{ backgroundColor: timer.color }}
+        role="region"
+        aria-label={`${timer.name} is running`}
+      >
+        {/* Left: icon + info */}
+        <div className="flex items-center gap-lg">
+          {/* White icon square */}
+          <div
+            className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+            aria-hidden="true"
+          >
+            <i className={`fa-solid fa-${timer.icon} text-[24px] text-white`} />
+          </div>
+
+          {/* Name + counter */}
+          <div className="min-w-0">
+            <h3
+              className="text-[18px] leading-[1.4] tracking-[-0.01em] font-medium text-white truncate"
+            >
+              {timer.name}
+            </h3>
+            <p
+              className="text-[14px] leading-[1.5] mt-[2px] text-white font-mono opacity-90"
+              aria-live="polite"
+              aria-label={`Elapsed time: ${formatHHMMSS(elapsed)}`}
+            >
+              {formatHHMMSS(elapsed)}
+            </p>
+          </div>
+        </div>
+
+        {/* Right: STOP button */}
+        <button
+          type="button"
+          className="px-md py-sm rounded-lg text-[12px] font-medium tracking-[0.02em] transition-transform active:scale-95 flex-shrink-0 text-white"
+          style={{
+            border: '2px solid rgba(255,255,255,0.8)',
+            backgroundColor: 'transparent',
+          }}
+          onClick={handleStopClick}
+          aria-label={`Stop ${timer.name}`}
+        >
+          STOP
+        </button>
+      </div>
+    )
+  }
+
+  // ── Idle state ─────────────────────────────────────────────────────────────
+  return (
+    <>
+      <div
+        className={`group rounded-xl flex items-center justify-between p-lg transition-all duration-200 ${
+          disabled ? 'opacity-50' : 'cursor-pointer'
+        }`}
+        style={{
+          backgroundColor: 'var(--color-surface-container-lowest)',
+          border: '1px solid var(--color-outline-variant)',
+        }}
+        onClick={handleCardClick}
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        onKeyDown={(e) => {
+          if (disabled) return
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setShowEditModal(true)
+          }
+        }}
+        aria-label={`Edit ${timer.name}`}
+        aria-disabled={disabled}
+      >
+        {/* Left: icon + info */}
+        <div className="flex items-center gap-lg">
+          {/* Colored icon square */}
+          <div
+            className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: timer.color }}
+            aria-hidden="true"
+          >
+            <i className={`fa-solid fa-${timer.icon} text-[24px] text-white`} />
+          </div>
+
+          {/* Name + today time */}
+          <div className="min-w-0">
+            <h3
+              className="text-[18px] leading-[1.4] tracking-[-0.01em] font-medium truncate"
+              style={{ color: 'var(--color-on-surface)' }}
+            >
+              {timer.name}
+            </h3>
+            <p
+              className="text-[14px] leading-[1.5] mt-[2px]"
+              style={{ color: 'var(--color-on-surface-variant)' }}
+            >
+              {formatTodayTime(todaySeconds)}
+            </p>
+          </div>
+        </div>
+
+        {/* Right: START button */}
+        <button
+          type="button"
+          className={`px-md py-sm rounded-lg text-[12px] font-medium tracking-[0.02em] flex-shrink-0 ${
+            disabled
+              ? 'opacity-50 cursor-not-allowed'
+              : 'transition-transform active:scale-95'
+          }`}
+          style={{
+            backgroundColor: 'var(--color-primary)',
+            color: 'var(--color-on-primary)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+          onClick={handleStartClick}
+          disabled={disabled}
+          aria-label={`Start ${timer.name}`}
+          aria-disabled={disabled}
+        >
+          START
+        </button>
+      </div>
+
+      {/* Edit modal */}
+      {showEditModal && (
+        <EditTimerModal
+          timer={timer}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
+    </>
+  )
+}
