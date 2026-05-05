@@ -21,8 +21,10 @@ export function LoginForm() {
         setError(result.error)
       }
       // On success, the server action redirects — no client-side action needed
-    } catch {
-      setError('An unexpected error occurred. Please try again.')
+    } catch (e) {
+      // Surface the actual error message in production for easier debugging
+      const msg = e instanceof Error ? e.message : String(e)
+      setError(`Something went wrong: ${msg}`)
     } finally {
       setIsPending(false)
     }
