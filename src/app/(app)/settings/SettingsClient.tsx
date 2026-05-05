@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { changePasswordAction, deleteAccountAction } from './actions'
+import { useTimeFormat } from '@/lib/utils/useTimeFormat'
+import type { TimeFormat } from '@/lib/utils/useTimeFormat'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -196,19 +198,69 @@ function DarkModeToggle() {
         role="switch"
         aria-checked={isDark}
         onClick={handleToggleDark}
-        className="relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30 flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
-        style={{
-          backgroundColor: isDark
-            ? 'var(--color-secondary)'
-            : 'var(--color-outline-variant)',
-        }}
+        className="relative flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/30 p-[10px] -m-[10px] rounded-full"
         aria-label="Toggle dark mode"
       >
         <span
-          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
-          style={{ left: isDark ? 'calc(100% - 20px)' : '4px' }}
-        />
+          className="relative block w-12 h-6 rounded-full transition-colors duration-200"
+          style={{
+            backgroundColor: isDark
+              ? 'var(--color-secondary)'
+              : 'var(--color-outline-variant)',
+          }}
+        >
+          <span
+            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
+            style={{ left: isDark ? 'calc(100% - 20px)' : '4px' }}
+          />
+        </span>
       </button>
+    </div>
+  )
+}
+
+// ─── Time Format Toggle ───────────────────────────────────────────────────────
+
+function TimeFormatToggle() {
+  const [format, setFormat] = useTimeFormat()
+
+  return (
+    <div className="flex items-center justify-between gap-md">
+      <div className="min-w-0">
+        <p className="text-[14px] font-medium text-on-surface">Time Format</p>
+        <p className="text-[12px] text-on-surface-variant mt-xs">
+          Choose between 12-hour and 24-hour clock
+        </p>
+      </div>
+      <div
+        className="flex rounded-lg overflow-hidden flex-shrink-0"
+        style={{ border: '1px solid var(--color-outline-variant)' }}
+        role="group"
+        aria-label="Time format"
+      >
+        {(['12h', '24h'] as TimeFormat[]).map((option) => {
+          const isActive = format === option
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setFormat(option)}
+              className="px-md py-sm text-[13px] font-medium transition-colors"
+              style={{
+                backgroundColor: isActive
+                  ? 'var(--color-secondary)'
+                  : 'transparent',
+                color: isActive
+                  ? 'var(--color-on-secondary)'
+                  : 'var(--color-on-surface-variant)',
+              }}
+              aria-pressed={isActive}
+            >
+              {option}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -396,8 +448,11 @@ export default function SettingsClient({ email }: { email: string }) {
         {/* Appearance section */}
         <section>
           <SectionHeading>Appearance</SectionHeading>
-          <Card>
+          <Card className="space-y-lg">
             <DarkModeToggle />
+            <div style={{ borderTop: '1px solid var(--color-outline-variant)' }} className="pt-lg">
+              <TimeFormatToggle />
+            </div>
           </Card>
         </section>
 

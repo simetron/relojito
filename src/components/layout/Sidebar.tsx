@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { logoutAction } from '@/app/actions/auth'
 
 const navItems = [
-  { label: 'Timers', icon: 'fa-solid fa-grid-2', route: '/dashboard' },
+  { label: 'Timers', icon: 'fa-solid fa-clock', route: '/dashboard' },
   { label: 'History', icon: 'fa-solid fa-clock-rotate-left', route: '/history' },
   { label: 'Stats', icon: 'fa-solid fa-chart-simple', route: '/stats' },
   { label: 'Settings', icon: 'fa-solid fa-gear', route: '/settings' },
@@ -24,12 +24,20 @@ export default function Sidebar() {
     >
       {/* Logo / App name */}
       <div className="px-lg py-lg">
-        <span
-          className="text-[20px] font-semibold tracking-[-0.01em]"
-          style={{ color: 'var(--color-on-surface)' }}
-        >
-          Relojito
-        </span>
+        <div className="flex items-center gap-sm">
+          <div
+            className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: 'var(--color-primary)' }}
+          >
+            <i className="fa-solid fa-hourglass-half text-[14px] text-white" aria-hidden="true" />
+          </div>
+          <span
+            className="text-[20px] font-semibold tracking-[-0.01em]"
+            style={{ color: 'var(--color-on-surface)' }}
+          >
+            Relojito
+          </span>
+        </div>
       </div>
 
       {/* Navigation items */}

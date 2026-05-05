@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 interface RecoveryBannerProps {
   sessionId: string
   timerName: string
+  onDismiss?: () => void
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -18,7 +19,7 @@ interface RecoveryBannerProps {
  * Offers Stop (close with current time) or Discard (delete) actions.
  * Satisfies Req 3.7.
  */
-export default function RecoveryBanner({ sessionId, timerName }: RecoveryBannerProps) {
+export default function RecoveryBanner({ sessionId, timerName, onDismiss }: RecoveryBannerProps) {
   const router = useRouter()
   const [visible, setVisible] = useState(true)
   const [loading, setLoading] = useState<'stop' | 'discard' | null>(null)
@@ -36,6 +37,7 @@ export default function RecoveryBanner({ sessionId, timerName }: RecoveryBannerP
       return
     }
     setVisible(false)
+    onDismiss?.()
     router.refresh()
   }
 
@@ -49,6 +51,7 @@ export default function RecoveryBanner({ sessionId, timerName }: RecoveryBannerP
       return
     }
     setVisible(false)
+    onDismiss?.()
     router.refresh()
   }
 

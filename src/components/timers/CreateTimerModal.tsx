@@ -1,8 +1,8 @@
 'use client'
 
-import { useActionState, useEffect, useRef, useState } from 'react'
-import { createTimer, ALLOWED_COLORS, ALLOWED_ICONS } from '@/app/actions/timers'
-import type { TimerActionResult } from '@/app/actions/timers'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { createTimer } from '@/app/actions/timers'
+import { ALLOWED_COLORS, ALLOWED_ICONS, type TimerActionResult } from '@/lib/utils/timerConstants'
 
 // ─── Color swatch metadata ────────────────────────────────────────────────────
 
@@ -33,6 +33,12 @@ const ICON_OPTIONS: { name: string; label: string }[] = [
   { name: 'pen-to-square', label: 'Writing' },
 ]
 
+// ─── Random defaults ──────────────────────────────────────────────────────────
+
+function randomPick<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface CreateTimerModalProps {
@@ -42,14 +48,12 @@ interface CreateTimerModalProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
-  const [selectedColor, setSelectedColor] = useState<string>(ALLOWED_COLORS[0])
-  const [selectedIcon, setSelectedIcon] = useState<string>(ALLOWED_ICONS[0])
+  const [selectedColor, setSelectedColor] = useState<string>(() => randomPick(COLOR_SWATCHES).hex)
+  const [selectedIcon, setSelectedIcon] = useState<string>(() => randomPick(ICON_OPTIONS).name)
   const [nameValue, setNameValue] = useState('')
 
-  const [state, formAction, isPending] = useActionState<TimerActionResult | null, FormData>(
-    createTimer,
-    null
-  )
+  const [state, setState] = useState<TimerActionResult | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   // Close on success
   useEffect(() => {
@@ -149,7 +153,10 @@ export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
           action={(formData) => {
             formData.set('color', selectedColor)
             formData.set('icon', selectedIcon)
-            formAction(formData)
+            startTransition(async () => {
+              const result = await createTimer(formData)
+              setState(result)
+            })
           }}
           className="flex flex-col flex-1 overflow-y-auto"
         >

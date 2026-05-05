@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const navItems = [
-  { label: 'Timers', icon: 'fa-solid fa-grid-2', route: '/dashboard' },
+  { label: 'Timers', icon: 'fa-solid fa-clock', route: '/dashboard' },
   { label: 'History', icon: 'fa-solid fa-clock-rotate-left', route: '/history' },
   { label: 'Stats', icon: 'fa-solid fa-chart-simple', route: '/stats' },
   { label: 'Settings', icon: 'fa-solid fa-gear', route: '/settings' },

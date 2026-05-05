@@ -19,8 +19,8 @@ export async function loginAction(formData: FormData) {
   })
 
   if (error) {
-    // Generic error message to avoid revealing which field is wrong
-    return { error: 'Invalid email or password. Please try again.' }
+    // Temporarily show the real Supabase error for debugging
+    return { error: error.message }
   }
 
   // On success, redirect to dashboard

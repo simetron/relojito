@@ -1,9 +1,9 @@
 'use client'
 
-import { useActionState, useEffect, useRef, useState } from 'react'
-import { updateTimer, deleteTimer, ALLOWED_COLORS, ALLOWED_ICONS } from '@/app/actions/timers'
-import type { TimerActionResult } from '@/app/actions/timers'
-import type { Timer } from './TimerCard'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { updateTimer, deleteTimer } from '@/app/actions/timers'
+import { ALLOWED_COLORS, ALLOWED_ICONS, type TimerActionResult } from '@/lib/utils/timerConstants'
+import type { Timer } from '@/lib/utils/timerConstants'
 
 // ─── Color swatch metadata ────────────────────────────────────────────────────
 
@@ -58,10 +58,8 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const [state, formAction, isPending] = useActionState<TimerActionResult | null, FormData>(
-    updateTimer,
-    null
-  )
+  const [state, setState] = useState<TimerActionResult | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   // Close on successful save
   useEffect(() => {
@@ -175,7 +173,10 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
             formData.set('timerId', timer.id)
             formData.set('color', selectedColor)
             formData.set('icon', selectedIcon)
-            formAction(formData)
+            startTransition(async () => {
+              const result = await updateTimer(formData)
+              setState(result)
+            })
           }}
           className="flex flex-col flex-1 overflow-y-auto"
         >

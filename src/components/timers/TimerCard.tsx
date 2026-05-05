@@ -35,9 +35,10 @@ interface TimerCardProps {
 
 /**
  * Format total seconds as a human-readable "Today: Xm" or "Today: 1h 23m" string.
+ * Returns null if there are no sessions today.
  */
-function formatTodayTime(totalSeconds: number): string {
-  if (totalSeconds <= 0) return 'Today: 0m'
+function formatTodayTime(totalSeconds: number): string | null {
+  if (totalSeconds <= 0) return null
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
   if (hours > 0 && minutes > 0) return `Today: ${hours}h ${minutes}m`
@@ -107,31 +108,29 @@ export default function TimerCard({
   if (isRunning) {
     return (
       <div
-        className="group rounded-xl flex items-center justify-between p-lg transition-all duration-200"
+        className="group rounded-xl flex items-center justify-between px-lg py-xl transition-all duration-200 gap-md"
         style={{ backgroundColor: timer.color }}
         role="region"
         aria-label={`${timer.name} is running`}
       >
         {/* Left: icon + info */}
-        <div className="flex items-center gap-lg">
+        <div className="flex items-center gap-md min-w-0 flex-1">
           {/* White icon square */}
           <div
-            className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0"
+            className="w-16 h-16 xl:w-20 xl:h-20 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
             aria-hidden="true"
           >
-            <i className={`fa-solid fa-${timer.icon} text-[24px] text-white`} />
+            <i className={`fa-solid fa-${timer.icon} text-[28px] xl:text-[36px] text-white`} />
           </div>
 
           {/* Name + counter */}
-          <div className="min-w-0">
-            <h3
-              className="text-[18px] leading-[1.4] tracking-[-0.01em] font-medium text-white truncate"
-            >
+          <div className="min-w-0 flex-1">
+            <h3 className="text-[16px] xl:text-[22px] leading-[1.3] tracking-[-0.02em] font-semibold text-white truncate">
               {timer.name}
             </h3>
             <p
-              className="text-[14px] leading-[1.5] mt-[2px] text-white font-mono opacity-90"
+              className="text-[22px] xl:text-[28px] leading-[1.2] mt-[2px] text-white font-semibold tracking-[-0.02em]"
               aria-live="polite"
               aria-label={`Elapsed time: ${formatHHMMSS(elapsed)}`}
             >
@@ -143,7 +142,7 @@ export default function TimerCard({
         {/* Right: STOP button */}
         <button
           type="button"
-          className="px-md py-sm rounded-lg text-[12px] font-medium tracking-[0.02em] transition-transform active:scale-95 flex-shrink-0 text-white"
+          className="px-md xl:px-lg py-sm xl:py-md rounded-xl text-[12px] xl:text-[13px] font-semibold tracking-[0.04em] transition-transform active:scale-95 flex-shrink-0 text-white"
           style={{
             border: '2px solid rgba(255,255,255,0.8)',
             backgroundColor: 'transparent',
@@ -200,12 +199,14 @@ export default function TimerCard({
             >
               {timer.name}
             </h3>
-            <p
-              className="text-[14px] leading-[1.5] mt-[2px]"
-              style={{ color: 'var(--color-on-surface-variant)' }}
-            >
-              {formatTodayTime(todaySeconds)}
-            </p>
+            {formatTodayTime(todaySeconds) && (
+              <p
+                className="text-[14px] leading-[1.5] mt-[2px]"
+                style={{ color: 'var(--color-on-surface-variant)' }}
+              >
+                {formatTodayTime(todaySeconds)}
+              </p>
+            )}
           </div>
         </div>
 

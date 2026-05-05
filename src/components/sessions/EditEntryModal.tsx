@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { checkOverlap } from '@/lib/utils/overlap'
+import TimeInput from './TimeInput'
+import { useTimeFormat } from '@/lib/utils/useTimeFormat'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,7 +51,7 @@ function toLocalDateValue(utcIso: string): string {
 }
 
 /**
- * Convert a UTC ISO string to a local HH:MM string (for <input type="time">).
+ * Convert a UTC ISO string to a local HH:MM string (always 24h for internal state).
  */
 function toLocalTimeValue(utcIso: string): string {
   const d = new Date(utcIso)
@@ -101,6 +103,9 @@ export default function EditEntryModal({
   const [showOverlapWarning, setShowOverlapWarning] = useState(false)
   const [pendingSavePayload, setPendingSavePayload] = useState<SavePayload | null>(null)
 
+  const [timeFormat] = useTimeFormat()
+  const use12h = timeFormat === '12h'
+
   // ── Computed duration ──────────────────────────────────────────────────────
   const durationDisplay = useMemo(() => {
     const start = combineDateAndTime(dateValue, startTimeValue)
@@ -119,6 +124,10 @@ export default function EditEntryModal({
 
   // ── Focus trap ─────────────────────────────────────────────────────────────
   const modalRef = useRef<HTMLDivElement>(null)
+  const startHoursRef = useRef<HTMLInputElement>(null)
+  const startMinutesRef = useRef<HTMLInputElement>(null)
+  const endHoursRef = useRef<HTMLInputElement>(null)
+  const endMinutesRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     const el = modalRef.current
     if (!el) return
@@ -159,10 +168,19 @@ export default function EditEntryModal({
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleSave = async () => {
+    const now = new Date()
     const start = combineDateAndTime(dateValue, startTimeValue)
     const end = combineDateAndTime(dateValue, endTimeValue)
     if (!start || !end || end.getTime() <= start.getTime()) {
       setValidationError('End time must be after start time.')
+      return
+    }
+    if (start.getTime() > now.getTime()) {
+      setValidationError('Start time cannot be in the future.')
+      return
+    }
+    if (end.getTime() > now.getTime()) {
+      setValidationError('End time cannot be in the future.')
       return
     }
     setValidationError(null)
@@ -271,10 +289,9 @@ export default function EditEntryModal({
                     onClick={() => { setSelectedTimerId(timer.id); setValidationError(null) }}
                     className="flex flex-col items-center gap-xs p-sm rounded-lg transition-all active:scale-95"
                     style={{
-                      backgroundColor: isSelected ? timer.color : 'transparent',
-                      color: isSelected ? 'var(--color-on-primary)' : 'var(--color-on-surface-variant)',
-                      outline: isSelected ? `2px solid ${timer.color}` : '2px solid transparent',
-                      outlineOffset: '2px',
+                      backgroundColor: 'transparent',
+                      color: isSelected ? timer.color : 'var(--color-on-surface-variant)',
+                      border: isSelected ? `2px solid ${timer.color}` : '2px solid transparent',
                     }}
                     aria-label={`${timer.name}${isSelected ? ' (selected)' : ''}`}
                     aria-pressed={isSelected}
@@ -283,9 +300,7 @@ export default function EditEntryModal({
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{
-                        backgroundColor: isSelected
-                          ? 'rgba(255,255,255,0.2)'
-                          : timer.color,
+                        backgroundColor: timer.color,
                       }}
                       aria-hidden="true"
                     >
@@ -296,7 +311,7 @@ export default function EditEntryModal({
                     <span
                       className="text-[10px] font-medium leading-tight text-center w-full truncate"
                       style={{
-                        color: isSelected ? 'var(--color-on-primary)' : 'var(--color-on-surface-variant)',
+                        color: isSelected ? timer.color : 'var(--color-on-surface-variant)',
                       }}
                     >
                       {timer.name}
@@ -350,27 +365,16 @@ export default function EditEntryModal({
               >
                 Start Time
               </label>
-              <div
-                className="flex items-center gap-sm px-md rounded-xl"
-                style={{
-                  backgroundColor: 'var(--color-surface-container)',
-                  border: '1px solid var(--color-outline-variant)',
-                }}
-              >
-                <i
-                  className="fa-regular fa-clock text-[16px] flex-shrink-0"
-                  style={{ color: 'var(--color-outline)' }}
-                  aria-hidden="true"
-                />
-                <input
-                  id="edit-entry-start"
-                  type="time"
-                  value={startTimeValue}
-                  onChange={(e) => { setStartTimeValue(e.target.value); setValidationError(null) }}
-                  className="flex-1 h-12 bg-transparent text-[14px] outline-none"
-                  style={{ color: 'var(--color-on-surface)' }}
-                />
-              </div>
+              <TimeInput
+                id="edit-entry-start"
+                value={startTimeValue}
+                onChange={(v) => { setStartTimeValue(v); setValidationError(null) }}
+                use12h={use12h}
+                hoursRef={startHoursRef}
+                minutesRef={startMinutesRef}
+                nextRef={endHoursRef}
+                aria-label="Start time"
+              />
             </div>
 
             {/* End time */}
@@ -382,27 +386,15 @@ export default function EditEntryModal({
               >
                 End Time
               </label>
-              <div
-                className="flex items-center gap-sm px-md rounded-xl"
-                style={{
-                  backgroundColor: 'var(--color-surface-container)',
-                  border: '1px solid var(--color-outline-variant)',
-                }}
-              >
-                <i
-                  className="fa-regular fa-clock text-[16px] flex-shrink-0"
-                  style={{ color: 'var(--color-outline)' }}
-                  aria-hidden="true"
-                />
-                <input
-                  id="edit-entry-end"
-                  type="time"
-                  value={endTimeValue}
-                  onChange={(e) => { setEndTimeValue(e.target.value); setValidationError(null) }}
-                  className="flex-1 h-12 bg-transparent text-[14px] outline-none"
-                  style={{ color: 'var(--color-on-surface)' }}
-                />
-              </div>
+              <TimeInput
+                id="edit-entry-end"
+                value={endTimeValue}
+                onChange={(v) => { setEndTimeValue(v); setValidationError(null) }}
+                use12h={use12h}
+                hoursRef={endHoursRef}
+                minutesRef={endMinutesRef}
+                aria-label="End time"
+              />
             </div>
           </section>
 
@@ -426,7 +418,7 @@ export default function EditEntryModal({
               Duration
             </span>
             <span
-              className="text-[18px] font-semibold leading-[1.4] tracking-[-0.01em] font-mono"
+              className="text-[18px] font-semibold leading-[1.4] tracking-[-0.01em]"
               style={{
                 color: isValidRange
                   ? 'var(--color-primary)'
@@ -444,11 +436,10 @@ export default function EditEntryModal({
         {/* ── Overlap warning banner ── */}
         {showOverlapWarning && (
           <div
-            className="flex-shrink-0 mx-lg mb-0 mt-0 px-md py-sm rounded-xl flex items-start gap-sm"
+            className="flex-shrink-0 mx-lg mb-md px-md py-sm rounded-xl flex items-start gap-sm"
             style={{
-              backgroundColor: 'var(--color-tertiary-container)',
-              color: 'var(--color-on-tertiary-container)',
-              margin: '0 var(--spacing-lg)',
+              backgroundColor: '#FEF9C3',
+              color: '#713F12',
             }}
             role="alert"
           >
@@ -466,8 +457,8 @@ export default function EditEntryModal({
                   onClick={handleOverlapAccept}
                   className="px-md py-xs rounded-lg text-[13px] font-semibold transition-all active:scale-[0.98]"
                   style={{
-                    backgroundColor: 'var(--color-on-tertiary-container)',
-                    color: 'var(--color-tertiary-container)',
+                    backgroundColor: '#713F12',
+                    color: '#FEF9C3',
                   }}
                 >
                   Accept
@@ -478,8 +469,8 @@ export default function EditEntryModal({
                   className="px-md py-xs rounded-lg text-[13px] font-medium transition-colors"
                   style={{
                     backgroundColor: 'transparent',
-                    color: 'var(--color-on-tertiary-container)',
-                    border: '1px solid var(--color-on-tertiary-container)',
+                    color: '#713F12',
+                    border: '1px solid #713F12',
                   }}
                 >
                   Cancel
@@ -507,6 +498,16 @@ export default function EditEntryModal({
           </button>
 
           <div className="flex-1" />
+
+          {/* Cancel button */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-12 px-md text-[14px] font-medium transition-colors active:opacity-70"
+            style={{ color: 'var(--color-on-surface-variant)' }}
+          >
+            Cancel
+          </button>
 
           {/* Save button */}
           <button

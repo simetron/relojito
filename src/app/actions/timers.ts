@@ -3,51 +3,16 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-export const ALLOWED_COLORS = [
-  '#5850EC', // Indigo
-  '#5F4B1B', // Brown
-  '#F94144', // Red
-  '#10B981', // Green
-  '#F59E0B', // Amber
-  '#8B5CF6', // Purple
-  '#0EA5E9', // Sky
-] as const
-
-export const ALLOWED_ICONS = [
-  'person-running',
-  'book-open',
-  'person-praying',
-  'dumbbell',
-  'code',
-  'headphones',
-  'mug-saucer',
-  'paintbrush',
-  'moon',
-  'briefcase',
-  'music',
-  'pen-to-square',
-] as const
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export type TimerActionResult =
-  | { success: true; error?: never }
-  | { success?: never; error: string }
-
-export interface Timer {
-  id: string
-  name: string
-  color: string
-  icon: string
-}
+import {
+  ALLOWED_COLORS,
+  ALLOWED_ICONS,
+  type TimerActionResult,
+  type Timer,
+} from '@/lib/utils/timerConstants'
 
 // ─── createTimer ──────────────────────────────────────────────────────────────
 
 export async function createTimer(
-  _prevState: TimerActionResult | null,
   formData: FormData
 ): Promise<TimerActionResult> {
   const supabase = await createClient()
@@ -106,7 +71,6 @@ export async function createTimer(
 // ─── updateTimer ──────────────────────────────────────────────────────────────
 
 export async function updateTimer(
-  _prevState: TimerActionResult | null,
   formData: FormData
 ): Promise<TimerActionResult> {
   const supabase = await createClient()

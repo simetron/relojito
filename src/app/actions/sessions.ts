@@ -38,8 +38,9 @@ export interface GetHistoryResult {
 }
 
 export type SessionActionResult =
-  | { data: Session; error?: never }
-  | { data?: never; error: string }
+  | { data: Session; error?: never; discarded?: never }
+  | { data?: never; error: string; discarded?: never }
+  | { data?: never; error?: never; discarded: true }
 
 // ─── startTimer ───────────────────────────────────────────────────────────────
 
@@ -116,11 +117,23 @@ export async function stopTimer(sessionId: string): Promise<SessionActionResult>
   const startTime = new Date(session.start_time)
   const durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000)
 
+  // Sessions under 60 seconds are discarded automatically
+  if (durationSeconds < 60) {
+    await supabase
+      .from('sessions')
+      .delete()
+      .eq('id', sessionId)
+      .eq('user_id', user.id)
+
+    revalidatePath('/dashboard')
+    return { discarded: true }
+  }
+
   const { data, error } = await supabase
     .from('sessions')
     .update({
       end_time: endTime.toISOString(),
-      duration_seconds: durationSeconds > 0 ? durationSeconds : 1,
+      duration_seconds: durationSeconds,
       updated_at: new Date().toISOString(),
     })
     .eq('id', sessionId)
@@ -253,6 +266,14 @@ export async function saveManualSession(params: {
 
   if (endDate <= startDate) {
     return { error: 'End time must be after start time.' }
+  }
+
+  const now = new Date()
+  if (startDate > now) {
+    return { error: 'Start time cannot be in the future.' }
+  }
+  if (endDate > now) {
+    return { error: 'End time cannot be in the future.' }
   }
 
   const durationSeconds = Math.floor((endDate.getTime() - startDate.getTime()) / 1000)

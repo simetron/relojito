@@ -5,6 +5,7 @@ import type { HistorySession } from '@/app/actions/sessions'
 import { saveManualSession, deleteSession } from '@/app/actions/sessions'
 import EditEntryModal, { type TimerOption, type SavePayload } from '@/components/sessions/EditEntryModal'
 import ManualEntryModal, { type ManualSavePayload } from '@/components/sessions/ManualEntryModal'
+import { useTimeFormat, formatLocalTime } from '@/lib/utils/useTimeFormat'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -87,15 +88,9 @@ function groupSessionsByDay(sessions: HistorySession[]): DayGroup[] {
 }
 
 /**
- * Format a UTC ISO string as a local time string (e.g. "9:00 AM").
+ * Format a UTC ISO string as a local time string respecting user preference.
+ * Moved to useTimeFormat.ts — imported above.
  */
-function formatLocalTime(utcIso: string): string {
-  return new Date(utcIso).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
-}
 
 /**
  * Format duration in seconds as a human-readable badge.
@@ -122,6 +117,7 @@ export default function HistoryClient({ sessions, timers, page, hasMore }: Histo
   const [showManualEntry, setShowManualEntry] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [timeFormat] = useTimeFormat()
 
   // Group sessions by local calendar date (client-side, uses browser timezone)
   const dayGroups = useMemo(() => groupSessionsByDay(sessions), [sessions])
@@ -263,7 +259,7 @@ export default function HistoryClient({ sessions, timers, page, hasMore }: Histo
                   border: '1px solid var(--color-outline-variant)',
                 }}
                 onClick={() => setSelectedSession(session)}
-                aria-label={`Edit session: ${session.timer_name}, ${formatLocalTime(session.start_time)} to ${formatLocalTime(session.end_time)}`}
+                aria-label={`Edit session: ${session.timer_name}, ${formatLocalTime(session.start_time, timeFormat)} to ${formatLocalTime(session.end_time, timeFormat)}`}
               >
                 {/* Timer icon square — Req 6.3 */}
                 <div
@@ -301,7 +297,7 @@ export default function HistoryClient({ sessions, timers, page, hasMore }: Histo
                     className="text-[12px] font-medium tracking-[0.02em] mt-1"
                     style={{ color: 'var(--color-outline)' }}
                   >
-                    {formatLocalTime(session.start_time)} – {formatLocalTime(session.end_time)}
+                    {formatLocalTime(session.start_time, timeFormat)} – {formatLocalTime(session.end_time, timeFormat)}
                   </p>
                 </div>
 

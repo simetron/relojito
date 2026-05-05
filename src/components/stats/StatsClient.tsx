@@ -7,6 +7,7 @@ import DonutChart from '@/components/stats/DonutChart'
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface StatsClientProps {
+  userId: string
   initialStats: TimerStat[]
   initialSessions: RawSession[]
   initialError?: string
@@ -63,16 +64,27 @@ function hasAnyOverlap(sessions: RawSession[]): boolean {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function StatsClient({
+  userId,
   initialStats,
   initialSessions,
   initialError,
 }: StatsClientProps) {
+  const NEVER_SHOW_KEY = `overlap-notice-hidden-${userId}`
+
   const [rangeDays, setRangeDays] = useState<7 | 30>(7)
   const [stats, setStats] = useState<TimerStat[]>(initialStats)
   const [sessions, setSessions] = useState<RawSession[]>(initialSessions)
   const [fetchError, setFetchError] = useState<string | undefined>(initialError)
   const [overlapDismissed, setOverlapDismissed] = useState(false)
+  const [overlapNeverShow, setOverlapNeverShow] = useState(false)
   const [isPending, startTransition] = useTransition()
+
+  // Read the "never show" preference on mount
+  useEffect(() => {
+    if (localStorage.getItem(NEVER_SHOW_KEY) === '1') {
+      setOverlapNeverShow(true)
+    }
+  }, [NEVER_SHOW_KEY])
 
   // Re-fetch when range changes.
   // We track whether this is the initial mount to skip the redundant fetch
@@ -92,7 +104,7 @@ export default function StatsClient({
         setStats(result.stats)
         setSessions(result.sessions)
         setFetchError(undefined)
-        // Reset overlap dismissal when range changes
+        // Reset per-session dismissal when range changes (but not "never show")
         setOverlapDismissed(false)
       }
     })
@@ -113,7 +125,12 @@ export default function StatsClient({
   }))
 
   const showOverlapNotice =
-    !overlapDismissed && sessions.length > 1 && hasAnyOverlap(sessions)
+    !overlapDismissed && !overlapNeverShow && sessions.length > 1 && hasAnyOverlap(sessions)
+
+  const handleNeverShow = () => {
+    localStorage.setItem(NEVER_SHOW_KEY, '1')
+    setOverlapNeverShow(true)
+  }
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -160,8 +177,8 @@ export default function StatsClient({
         <div
           className="mb-lg flex items-center gap-sm px-md py-sm rounded-xl"
           style={{
-            backgroundColor: 'var(--color-error-container)',
-            color: 'var(--color-on-error-container)',
+            backgroundColor: '#FEF9C3',
+            color: '#713F12',
           }}
           role="alert"
         >
@@ -177,12 +194,25 @@ export default function StatsClient({
             onClick={() => setOverlapDismissed(true)}
             className="text-[12px] font-semibold px-sm py-1 rounded-lg flex-shrink-0 transition-opacity hover:opacity-80"
             style={{
-              backgroundColor: 'var(--color-on-error-container)',
-              color: 'var(--color-error-container)',
+              backgroundColor: '#713F12',
+              color: '#FEF9C3',
             }}
             aria-label="Accept and dismiss overlap notice"
           >
             Accept
+          </button>
+          <button
+            type="button"
+            onClick={handleNeverShow}
+            className="text-[12px] font-medium px-sm py-1 rounded-lg flex-shrink-0 transition-opacity hover:opacity-80"
+            style={{
+              backgroundColor: 'transparent',
+              color: '#713F12',
+              border: '1px solid #713F12',
+            }}
+            aria-label="Never show overlap notice again"
+          >
+            Do not show anymore
           </button>
         </div>
       )}
