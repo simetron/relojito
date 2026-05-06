@@ -7,13 +7,11 @@ import StatsSkeleton from '@/components/stats/StatsSkeleton'
 
 // ─── StatsContent ─────────────────────────────────────────────────────────────
 
-async function StatsContent({ userId }: { userId: string }) {
-  const { stats, sessions, error } = await getStatsData(7)
+async function StatsContent() {
+  const { stats, error } = await getStatsData(7)
   return (
     <StatsClient
-      userId={userId}
       initialStats={stats ?? []}
-      initialSessions={sessions ?? []}
       initialError={error}
     />
   )
@@ -34,7 +32,7 @@ export default async function StatsPage() {
 
   return (
     <Suspense fallback={<StatsSkeleton />}>
-      <StatsContent userId={user.id} />
+      <StatsContent />
     </Suspense>
   )
 }

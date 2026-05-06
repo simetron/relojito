@@ -1,26 +1,19 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
-import { getStatsData, type TimerStat, type RawSession } from '@/app/actions/stats'
+import { getStatsData, type TimerStat } from '@/app/actions/stats'
 import DonutChart from '@/components/stats/DonutChart'
+import { BRAND_ICONS } from '@/lib/utils/timerConstants'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface StatsClientProps {
-  userId: string
   initialStats: TimerStat[]
-  initialSessions: RawSession[]
   initialError?: string
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * Format total seconds as a human-readable string for the donut center.
- * < 60s → "Xs"
- * < 3600s → "Xm"
- * ≥ 3600s → "Xh Ym"
- */
 function formatTotalTime(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
@@ -29,9 +22,6 @@ function formatTotalTime(seconds: number): string {
   return m > 0 ? `${h}h ${m}m` : `${h}h`
 }
 
-/**
- * Format total seconds as a breakdown label (e.g. "2h 34m" or "45m").
- */
 function formatBreakdownTime(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
@@ -40,55 +30,16 @@ function formatBreakdownTime(seconds: number): string {
   return m > 0 ? `${h}h ${m}m` : `${h}h`
 }
 
-/**
- * Pure JS overlap detection — no Supabase.
- * Two intervals overlap if A.start < B.end AND A.end > B.start.
- * Satisfies Req 5 AC 6.
- */
-function hasAnyOverlap(sessions: RawSession[]): boolean {
-  for (let i = 0; i < sessions.length; i++) {
-    for (let j = i + 1; j < sessions.length; j++) {
-      const a = sessions[i]
-      const b = sessions[j]
-      if (
-        new Date(a.start_time) < new Date(b.end_time) &&
-        new Date(a.end_time) > new Date(b.start_time)
-      ) {
-        return true
-      }
-    }
-  }
-  return false
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function StatsClient({
-  userId,
   initialStats,
-  initialSessions,
   initialError,
 }: StatsClientProps) {
-  const NEVER_SHOW_KEY = `overlap-notice-hidden-${userId}`
-
   const [rangeDays, setRangeDays] = useState<7 | 30>(7)
   const [stats, setStats] = useState<TimerStat[]>(initialStats)
-  const [sessions, setSessions] = useState<RawSession[]>(initialSessions)
   const [fetchError, setFetchError] = useState<string | undefined>(initialError)
-  const [overlapDismissed, setOverlapDismissed] = useState(false)
-  const [overlapNeverShow, setOverlapNeverShow] = useState(false)
   const [isPending, startTransition] = useTransition()
-
-  // Read the "never show" preference on mount
-  useEffect(() => {
-    if (localStorage.getItem(NEVER_SHOW_KEY) === '1') {
-      setOverlapNeverShow(true)
-    }
-  }, [NEVER_SHOW_KEY])
-
-  // Re-fetch when range changes.
-  // We track whether this is the initial mount to skip the redundant fetch
-  // (initial data for 7 days is already provided via SSR).
   const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
@@ -102,37 +53,19 @@ export default function StatsClient({
         setFetchError(result.error)
       } else {
         setStats(result.stats)
-        setSessions(result.sessions)
         setFetchError(undefined)
-        // Reset per-session dismissal when range changes (but not "never show")
-        setOverlapDismissed(false)
       }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rangeDays])
 
-  // ── Derived values ─────────────────────────────────────────────────────────
-
   const totalSeconds = stats.reduce((sum, s) => sum + s.total_seconds, 0)
   const totalLabel = formatTotalTime(totalSeconds)
-
-  // Sort by total_seconds DESC for breakdown list
   const sortedStats = [...stats].sort((a, b) => b.total_seconds - a.total_seconds)
-
   const donutSegments = sortedStats.map((s) => ({
     color: s.timer_color,
     value: s.total_seconds,
   }))
-
-  const showOverlapNotice =
-    !overlapDismissed && !overlapNeverShow && sessions.length > 1 && hasAnyOverlap(sessions)
-
-  const handleNeverShow = () => {
-    localStorage.setItem(NEVER_SHOW_KEY, '1')
-    setOverlapNeverShow(true)
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen py-lg">
@@ -146,7 +79,7 @@ export default function StatsClient({
         </h1>
       </div>
 
-      {/* Time range selector — Req 5 AC 4 */}
+      {/* Time range selector */}
       <div className="flex gap-sm mb-lg" role="group" aria-label="Time range">
         {([7, 30] as const).map((days) => (
           <button
@@ -171,51 +104,6 @@ export default function StatsClient({
           </button>
         ))}
       </div>
-
-      {/* Overlap notice — Req 5 AC 6 */}
-      {showOverlapNotice && (
-        <div
-          className="mb-lg flex items-center gap-sm px-md py-sm rounded-xl"
-          style={{
-            backgroundColor: '#FEF9C3',
-            color: '#713F12',
-          }}
-          role="alert"
-        >
-          <i
-            className="fa-solid fa-triangle-exclamation text-[14px] flex-shrink-0"
-            aria-hidden="true"
-          />
-          <span className="flex-1 text-[13px]">
-            Some sessions in this range overlap. Total time may exceed real elapsed time.
-          </span>
-          <button
-            type="button"
-            onClick={() => setOverlapDismissed(true)}
-            className="text-[12px] font-semibold px-sm py-1 rounded-lg flex-shrink-0 transition-opacity hover:opacity-80"
-            style={{
-              backgroundColor: '#713F12',
-              color: '#FEF9C3',
-            }}
-            aria-label="Accept and dismiss overlap notice"
-          >
-            Accept
-          </button>
-          <button
-            type="button"
-            onClick={handleNeverShow}
-            className="text-[12px] font-medium px-sm py-1 rounded-lg flex-shrink-0 transition-opacity hover:opacity-80"
-            style={{
-              backgroundColor: 'transparent',
-              color: '#713F12',
-              border: '1px solid #713F12',
-            }}
-            aria-label="Never show overlap notice again"
-          >
-            Do not show anymore
-          </button>
-        </div>
-      )}
 
       {/* Fetch error */}
       {fetchError && (
@@ -254,7 +142,7 @@ export default function StatsClient({
           </div>
         )}
 
-        {/* Donut chart — Req 5 AC 1 & 2 */}
+        {/* Donut chart */}
         {sortedStats.length > 0 && (
           <>
             <div className="flex justify-center mb-xl">
@@ -265,7 +153,7 @@ export default function StatsClient({
               />
             </div>
 
-            {/* Breakdown list — Req 5 AC 3 */}
+            {/* Breakdown list */}
             <div className="flex flex-col gap-md">
               {sortedStats.map((stat) => {
                 const pct =
@@ -282,18 +170,14 @@ export default function StatsClient({
                       border: '1px solid var(--color-outline-variant)',
                     }}
                   >
-                    {/* Timer icon square */}
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: stat.timer_color }}
                       aria-hidden="true"
                     >
-                      <i
-                        className={`fa-solid fa-${stat.timer_icon} text-[16px] text-white`}
-                      />
+                      <i className={`${BRAND_ICONS.has(stat.timer_icon) ? 'fa-brands' : 'fa-solid'} fa-${stat.timer_icon} text-[16px] text-white`} />
                     </div>
 
-                    {/* Name, hours, percentage, progress bar */}
                     <div className="flex-grow min-w-0">
                       <div className="flex items-center justify-between gap-sm mb-1">
                         <span
@@ -321,7 +205,6 @@ export default function StatsClient({
                         </div>
                       </div>
 
-                      {/* Proportional progress bar */}
                       <div
                         className="w-full h-2 rounded-full overflow-hidden"
                         style={{ backgroundColor: 'var(--color-surface-container-high)' }}

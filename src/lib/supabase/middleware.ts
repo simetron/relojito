@@ -50,9 +50,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // Redirect authenticated users away from auth pages
+  // Redirect authenticated users away from auth pages and landing page
   const isAuthRoute = pathname === '/login' || pathname === '/register'
-  if (isAuthRoute && user) {
+  const isLandingPage = pathname === '/'
+  if ((isAuthRoute || isLandingPage) && user) {
     const dashboardUrl = request.nextUrl.clone()
     dashboardUrl.pathname = '/dashboard'
     return NextResponse.redirect(dashboardUrl)

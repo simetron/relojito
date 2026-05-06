@@ -19,6 +19,24 @@ export async function changePasswordAction(formData: FormData) {
   return { success: true }
 }
 
+export async function saveThemeAction(theme: 'dark' | 'light'): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { error } = await supabase.auth.updateUser({
+    data: { theme },
+  })
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function saveTimeFormatAction(timeFormat: '12h' | '24h'): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { error } = await supabase.auth.updateUser({
+    data: { time_format: timeFormat },
+  })
+  if (error) return { error: error.message }
+  return {}
+}
+
 export async function deleteAccountAction() {
   const supabase = await createClient()
 

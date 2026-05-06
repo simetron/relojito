@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import EditTimerModal from './EditTimerModal'
 import { formatHHMMSS } from '@/lib/utils/time'
+import { BRAND_ICONS } from '@/lib/utils/timerConstants'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -13,6 +14,7 @@ export interface Timer {
   color: string
   icon: string
   position: number
+  is_active: boolean
   created_at: string
   updated_at: string
 }
@@ -117,11 +119,11 @@ export default function TimerCard({
         <div className="flex items-center gap-md min-w-0 flex-1">
           {/* White icon square */}
           <div
-            className="w-16 h-16 xl:w-20 xl:h-20 rounded-xl flex items-center justify-center flex-shrink-0"
+            className="w-16 h-16 xl:w-20 xl:h-20 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md"
             style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
             aria-hidden="true"
           >
-            <i className={`fa-solid fa-${timer.icon} text-[28px] xl:text-[36px] text-white`} />
+            <i className={`${BRAND_ICONS.has(timer.icon) ? 'fa-brands' : 'fa-solid'} fa-${timer.icon} text-[28px] xl:text-[36px] text-white`} />
           </div>
 
           {/* Name + counter */}
@@ -160,7 +162,7 @@ export default function TimerCard({
   return (
     <>
       <div
-        className={`group rounded-xl flex items-center justify-between p-lg transition-all duration-200 ${
+        className={`group rounded-xl flex items-center justify-between gap-md p-lg transition-all duration-200 ${
           disabled ? 'opacity-50' : 'cursor-pointer'
         }`}
         style={{
@@ -181,18 +183,18 @@ export default function TimerCard({
         aria-disabled={disabled}
       >
         {/* Left: icon + info */}
-        <div className="flex items-center gap-lg">
+        <div className="flex items-center gap-lg min-w-0 flex-1">
           {/* Colored icon square */}
           <div
-            className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0"
+            className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md"
             style={{ backgroundColor: timer.color }}
             aria-hidden="true"
           >
-            <i className={`fa-solid fa-${timer.icon} text-[24px] text-white`} />
+            <i className={`${BRAND_ICONS.has(timer.icon) ? 'fa-brands' : 'fa-solid'} fa-${timer.icon} text-[24px] text-white`} />
           </div>
 
           {/* Name + today time */}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h3
               className="text-[18px] leading-[1.4] tracking-[-0.01em] font-medium truncate"
               style={{ color: 'var(--color-on-surface)' }}
@@ -201,7 +203,7 @@ export default function TimerCard({
             </h3>
             {formatTodayTime(todaySeconds) && (
               <p
-                className="text-[14px] leading-[1.5] mt-[2px]"
+                className="text-[14px] leading-[1.5] mt-[2px] truncate"
                 style={{ color: 'var(--color-on-surface-variant)' }}
               >
                 {formatTodayTime(todaySeconds)}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import TimerCard from '@/components/timers/TimerCard'
 import CreateTimerModal from '@/components/timers/CreateTimerModal'
+import ReorderModal from '@/components/timers/ReorderModal'
 import RecoveryBanner from '@/components/layout/RecoveryBanner'
 import type { Timer, ActiveSession } from '@/components/timers/TimerCard'
 import { startTimer, stopTimer } from '@/app/actions/sessions'
@@ -12,6 +13,7 @@ import { useRealtimeSession } from '@/lib/realtime/RealtimeSessionContext'
 
 interface DashboardClientProps {
   timers: Timer[]
+  allTimers: Timer[]
   todaySecondsMap: Record<string, number>
   dateHeading: string
   /** Pre-existing active session loaded server-side (if any) */
@@ -22,11 +24,13 @@ interface DashboardClientProps {
 
 export default function DashboardClient({
   timers,
+  allTimers,
   todaySecondsMap,
   dateHeading,
   initialActiveSession,
 }: DashboardClientProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showReorderModal, setShowReorderModal] = useState(false)
   const [shortSessionToast, setShortSessionToast] = useState(false)
 
   // Track which timer has an active session and the session details
@@ -168,35 +172,44 @@ export default function DashboardClient({
           </p>
         </div>
 
-        {/* Create timer button — lives in the header, not a FAB */}
-        <button
-          type="button"
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-xs px-md h-9 rounded-lg text-[13px] font-semibold shrink-0 transition-all active:scale-95"
-          style={{
-            backgroundColor: 'var(--color-primary)',
-            color: 'var(--color-on-primary)',
-          }}
-          aria-label="Create new timer"
-        >
-          <i className="fa-solid fa-plus text-[12px]" aria-hidden="true" />
-          New Timer
-        </button>
+        {/* Reorder button — shown when there are 2+ active timers or any archived */}
+        {(timers.length > 1 || allTimers.some(t => !t.is_active)) && (
+          <button
+            type="button"
+            onClick={() => setShowReorderModal(true)}
+            className="w-9 h-9 flex items-center justify-center rounded-lg flex-shrink-0 transition-colors active:scale-95"
+            style={{
+              backgroundColor: 'var(--color-surface-container)',
+              color: 'var(--color-on-surface-variant)',
+              border: '1px solid var(--color-outline-variant)',
+            }}
+            aria-label="Reorder timers"
+          >
+            <i className="fa-solid fa-pencil text-[14px]" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {/* Timer list */}
       {timers.length === 0 ? (
-        <div
-          className="flex flex-col items-center justify-center py-xl gap-md rounded-xl"
-          style={{
-            border: '2px dashed var(--color-outline-variant)',
-            color: 'var(--color-on-surface-variant)',
-          }}
-        >
-          <i className="fa-solid fa-clock text-[40px] opacity-30" aria-hidden="true" />
-          <p className="text-[14px] text-center">
-            No timers yet. Click <strong>New Timer</strong> to create your first one.
-          </p>
+        <div className="flex flex-col gap-md">
+          {/* Empty state + add button as dashed card */}
+          <button
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center justify-center gap-md p-lg rounded-xl transition-colors active:scale-[0.99]"
+            style={{
+              border: '2px dashed var(--color-outline-variant)',
+              color: 'var(--color-on-surface-variant)',
+              backgroundColor: 'transparent',
+            }}
+            aria-label="Create new timer"
+          >
+            <i className="fa-solid fa-clock text-[40px] opacity-30" aria-hidden="true" />
+            <p className="text-[14px] text-center">
+              No timers yet. Tap <strong>New Timer +</strong> to create your first one.
+            </p>
+          </button>
         </div>
       ) : (
         <div className="flex flex-col gap-md">
@@ -220,6 +233,21 @@ export default function DashboardClient({
               />
             )
           })}
+
+          {/* Add new timer — dashed card at the bottom of the list */}
+          <button
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center justify-center gap-sm p-lg rounded-xl transition-colors active:scale-[0.99]"
+            style={{
+              border: '2px dashed var(--color-outline-variant)',
+              color: 'var(--color-on-surface-variant)',
+              backgroundColor: 'transparent',
+            }}
+            aria-label="Create new timer"
+          >
+            <span className="text-[14px] font-medium">New Timer +</span>
+          </button>
         </div>
       )}
 
@@ -243,6 +271,14 @@ export default function DashboardClient({
       {/* Create timer modal */}
       {showCreateModal && (
         <CreateTimerModal onClose={() => setShowCreateModal(false)} />
+      )}
+
+      {/* Reorder modal */}
+      {showReorderModal && (
+        <ReorderModal
+          timers={allTimers}
+          onClose={() => setShowReorderModal(false)}
+        />
       )}
 
       {/* Recovery banner — only shown for unacknowledged orphaned sessions */}

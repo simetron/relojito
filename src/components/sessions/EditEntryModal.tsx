@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { checkOverlap } from '@/lib/utils/overlap'
 import TimeInput from './TimeInput'
 import { useTimeFormat } from '@/lib/utils/useTimeFormat'
+import { BRAND_ICONS } from '@/lib/utils/timerConstants'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -99,9 +99,6 @@ export default function EditEntryModal({
   const [endTimeValue, setEndTimeValue] = useState<string>(toLocalTimeValue(session.end_time))
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
-  const [isCheckingOverlap, setIsCheckingOverlap] = useState(false)
-  const [showOverlapWarning, setShowOverlapWarning] = useState(false)
-  const [pendingSavePayload, setPendingSavePayload] = useState<SavePayload | null>(null)
 
   const [timeFormat] = useTimeFormat()
   const use12h = timeFormat === '12h'
@@ -184,33 +181,7 @@ export default function EditEntryModal({
       return
     }
     setValidationError(null)
-
-    const payload: SavePayload = { timerId: selectedTimerId, startTime: start, endTime: end }
-
-    setIsCheckingOverlap(true)
-    const { hasOverlap } = await checkOverlap(start, end, session.id)
-    setIsCheckingOverlap(false)
-
-    if (hasOverlap) {
-      setPendingSavePayload(payload)
-      setShowOverlapWarning(true)
-      return
-    }
-
-    onSave(payload)
-  }
-
-  const handleOverlapAccept = () => {
-    if (pendingSavePayload) {
-      onSave(pendingSavePayload)
-    }
-    setShowOverlapWarning(false)
-    setPendingSavePayload(null)
-  }
-
-  const handleOverlapCancel = () => {
-    setShowOverlapWarning(false)
-    setPendingSavePayload(null)
+    onSave({ timerId: selectedTimerId, startTime: start, endTime: end })
   }
 
   const handleDeleteConfirm = () => {
@@ -305,7 +276,7 @@ export default function EditEntryModal({
                       aria-hidden="true"
                     >
                       <i
-                        className={`fa-solid fa-${timer.icon} text-[18px] text-white`}
+                        className={`${BRAND_ICONS.has(timer.icon) ? 'fa-brands' : 'fa-solid'} fa-${timer.icon} text-[18px] text-white`}
                       />
                     </div>
                     <span
@@ -433,53 +404,6 @@ export default function EditEntryModal({
 
         </div>
 
-        {/* ── Overlap warning banner ── */}
-        {showOverlapWarning && (
-          <div
-            className="flex-shrink-0 mx-lg mb-md px-md py-sm rounded-xl flex items-start gap-sm"
-            style={{
-              backgroundColor: '#FEF9C3',
-              color: '#713F12',
-            }}
-            role="alert"
-          >
-            <i
-              className="fa-solid fa-triangle-exclamation text-[16px] flex-shrink-0 mt-[2px]"
-              aria-hidden="true"
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] leading-[1.5]">
-                Some sessions overlap. Total time may exceed real elapsed time.
-              </p>
-              <div className="flex gap-sm mt-sm">
-                <button
-                  type="button"
-                  onClick={handleOverlapAccept}
-                  className="px-md py-xs rounded-lg text-[13px] font-semibold transition-all active:scale-[0.98]"
-                  style={{
-                    backgroundColor: '#713F12',
-                    color: '#FEF9C3',
-                  }}
-                >
-                  Accept
-                </button>
-                <button
-                  type="button"
-                  onClick={handleOverlapCancel}
-                  className="px-md py-xs rounded-lg text-[13px] font-medium transition-colors"
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: '#713F12',
-                    border: '1px solid #713F12',
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ── Footer actions ── */}
         <div
           className="flex items-center gap-md px-lg py-md flex-shrink-0"
@@ -513,14 +437,14 @@ export default function EditEntryModal({
           <button
             type="button"
             onClick={handleSave}
-            disabled={!selectedTimerId || isCheckingOverlap}
+            disabled={!selectedTimerId}
             className="h-12 px-lg rounded-xl text-[14px] font-semibold transition-all active:scale-[0.98] disabled:opacity-50"
             style={{
               backgroundColor: 'var(--color-secondary)',
               color: 'var(--color-on-secondary)',
             }}
           >
-            {isCheckingOverlap ? 'Checking…' : 'Save'}
+            Save
           </button>
         </div>
       </div>

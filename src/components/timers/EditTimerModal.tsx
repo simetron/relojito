@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState, useTransition } from 'react'
-import { updateTimer, deleteTimer } from '@/app/actions/timers'
-import { ALLOWED_COLORS, ALLOWED_ICONS, type TimerActionResult } from '@/lib/utils/timerConstants'
+import { updateTimer, deleteTimer, archiveTimer } from '@/app/actions/timers'
+import { ALLOWED_COLORS, ALLOWED_ICONS, BRAND_ICONS, type TimerActionResult } from '@/lib/utils/timerConstants'
 import type { Timer } from '@/lib/utils/timerConstants'
 
 // ─── Color swatch metadata ────────────────────────────────────────────────────
@@ -15,24 +15,14 @@ const COLOR_SWATCHES: { hex: string; label: string }[] = [
   { hex: '#F59E0B', label: 'Amber' },
   { hex: '#8B5CF6', label: 'Purple' },
   { hex: '#0EA5E9', label: 'Sky' },
+  { hex: '#EC4899', label: 'Pink' },
+  { hex: '#374151', label: 'Dark Grey' },
+  { hex: '#F97316', label: 'Orange' },
+  { hex: '#166534', label: 'Dark Green' },
+  { hex: '#84CC16', label: 'Lime' },
 ]
 
 // ─── Icon metadata ────────────────────────────────────────────────────────────
-
-const ICON_OPTIONS: { name: string; label: string }[] = [
-  { name: 'person-running', label: 'Running' },
-  { name: 'book-open', label: 'Reading' },
-  { name: 'person-praying', label: 'Meditation' },
-  { name: 'dumbbell', label: 'Workout' },
-  { name: 'code', label: 'Coding' },
-  { name: 'headphones', label: 'Music' },
-  { name: 'mug-saucer', label: 'Coffee' },
-  { name: 'paintbrush', label: 'Art' },
-  { name: 'moon', label: 'Sleep' },
-  { name: 'briefcase', label: 'Work' },
-  { name: 'music', label: 'Instrument' },
-  { name: 'pen-to-square', label: 'Writing' },
-]
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -56,7 +46,10 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
   )
   const [nameValue, setNameValue] = useState(timer.name)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isArchiving, setIsArchiving] = useState(false)
+  const [archiveError, setArchiveError] = useState<string | null>(null)
 
   const [state, setState] = useState<TimerActionResult | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -82,6 +75,8 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
       if (e.key === 'Escape') {
         if (showDeleteConfirm) {
           setShowDeleteConfirm(false)
+        } else if (showArchiveConfirm) {
+          setShowArchiveConfirm(false)
         } else {
           onClose()
         }
@@ -104,13 +99,25 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose, showDeleteConfirm])
+  }, [onClose, showDeleteConfirm, showArchiveConfirm])
 
   const handleDelete = async () => {
     setIsDeleting(true)
     await deleteTimer(timer.id)
-    // deleteTimer redirects, so we won't reach here normally
     setIsDeleting(false)
+  }
+
+  const handleArchive = async () => {
+    setIsArchiving(true)
+    setArchiveError(null)
+    const result = await archiveTimer(timer.id)
+    setIsArchiving(false)
+    if (result.error) {
+      setArchiveError(result.error)
+      return
+    }
+    setShowArchiveConfirm(false)
+    onClose()
   }
 
   return (
@@ -182,7 +189,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
         >
           <div className="px-lg pb-lg space-y-lg">
             {/* Error message */}
-            {state?.error && (
+            {(state?.error || archiveError) && (
               <p
                 className="text-[14px] px-md py-sm rounded-lg"
                 style={{
@@ -191,7 +198,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                 }}
                 role="alert"
               >
-                {state.error}
+                {state?.error || archiveError}
               </p>
             )}
 
@@ -265,7 +272,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
               </div>
             </div>
 
-            {/* Icon picker */}
+            {/* Icon picker — flat grid */}
             <div className="space-y-sm">
               <label
                 className="text-[12px] font-medium tracking-[0.02em] uppercase"
@@ -274,30 +281,24 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                 Icon
               </label>
               <div className="grid grid-cols-6 gap-sm">
-                {ICON_OPTIONS.map((icon) => {
-                  const isSelected = selectedIcon === icon.name
+                {ALLOWED_ICONS.map((iconName) => {
+                  const isSelected = selectedIcon === iconName
                   return (
                     <button
-                      key={icon.name}
+                      key={iconName}
                       type="button"
-                      onClick={() => setSelectedIcon(icon.name)}
+                      onClick={() => setSelectedIcon(iconName)}
                       className="aspect-square flex items-center justify-center rounded-lg transition-colors"
                       style={{
-                        backgroundColor: isSelected
-                          ? 'var(--color-primary-container)'
-                          : 'transparent',
-                        color: isSelected
-                          ? 'var(--color-on-primary-container)'
-                          : 'var(--color-on-surface-variant)',
-                        border: isSelected
-                          ? '1px solid var(--color-outline-variant)'
-                          : '1px solid transparent',
+                        backgroundColor: 'transparent',
+                        color: isSelected ? 'var(--color-on-surface)' : 'var(--color-on-surface-variant)',
+                        border: isSelected ? '2px solid var(--color-primary)' : '1px solid transparent',
                       }}
-                      aria-label={`${icon.label}${isSelected ? ' (selected)' : ''}`}
+                      aria-label={iconName}
                       aria-pressed={isSelected}
-                      title={icon.label}
+                      title={iconName}
                     >
-                      <i className={`fa-solid fa-${icon.name} text-[18px]`} aria-hidden="true" />
+                      <i className={`${BRAND_ICONS.has(iconName) ? 'fa-brands' : 'fa-solid'} fa-${iconName} text-[18px]`} aria-hidden="true" />
                     </button>
                   )
                 })}
@@ -305,43 +306,54 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
             </div>
           </div>
 
-          {/* Footer actions */}
+          {/* Footer actions — two rows on mobile to prevent overflow */}
           <div
-            className="flex gap-md px-lg py-md flex-shrink-0"
+            className="flex flex-col gap-sm px-lg py-md flex-shrink-0"
             style={{ borderTop: '1px solid var(--color-outline-variant)' }}
           >
-            {/* Delete button */}
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="flex items-center gap-sm px-md py-sm rounded-lg text-[14px] font-medium transition-colors"
-              style={{ color: 'var(--color-error)' }}
-            >
-              <i className="fa-solid fa-trash-can" aria-hidden="true" />
-              Delete
-            </button>
-
-            <div className="flex-1" />
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-md py-sm rounded-xl text-[14px] font-medium transition-colors"
-              style={{ color: 'var(--color-on-surface-variant)' }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isPending || nameValue.trim().length === 0}
-              className="h-12 px-lg rounded-xl text-[14px] font-semibold transition-all active:scale-[0.98] disabled:opacity-50"
-              style={{
-                backgroundColor: 'var(--color-secondary)',
-                color: 'var(--color-on-secondary)',
-              }}
-            >
-              {isPending ? 'Saving…' : 'Save'}
-            </button>
+            {/* Row 1: Save + Cancel */}
+            <div className="flex gap-sm">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 h-11 rounded-xl text-[14px] font-medium transition-colors"
+                style={{ color: 'var(--color-on-surface-variant)' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isPending || nameValue.trim().length === 0}
+                className="flex-1 h-11 rounded-xl text-[14px] font-semibold transition-all active:scale-[0.98] disabled:opacity-50"
+                style={{
+                  backgroundColor: 'var(--color-secondary)',
+                  color: 'var(--color-on-secondary)',
+                }}
+              >
+                {isPending ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+            {/* Row 2: Delete + Archive */}
+            <div className="flex gap-sm">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="flex-1 flex items-center justify-center gap-sm h-10 rounded-xl text-[13px] font-medium transition-colors"
+                style={{ color: 'var(--color-error)' }}
+              >
+                <i className="fa-solid fa-trash-can" aria-hidden="true" />
+                Delete
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowArchiveConfirm(true)}
+                disabled={isArchiving}
+                className="flex-1 h-10 rounded-xl text-[13px] font-medium transition-colors active:scale-[0.98] disabled:opacity-50"
+                style={{ color: 'var(--color-on-surface-variant)' }}
+              >
+                Archive
+              </button>
+            </div>
           </div>
         </form>
       </div>
@@ -404,6 +416,82 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                 }}
               >
                 {isDeleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Archive confirmation dialog ── */}
+      {showArchiveConfirm && (
+        <div
+          className="absolute inset-0 flex items-center justify-center p-lg"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="archive-confirm-title"
+          aria-describedby="archive-confirm-desc"
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl p-lg space-y-lg"
+            style={{
+              backgroundColor: 'var(--color-surface-container-lowest)',
+              border: '1px solid var(--color-outline-variant)',
+            }}
+          >
+            <div className="space-y-sm">
+              <h3
+                id="archive-confirm-title"
+                className="text-[18px] font-semibold"
+                style={{ color: 'var(--color-on-surface)' }}
+              >
+                Archive &ldquo;{timer.name}&rdquo;?
+              </h3>
+              <p
+                id="archive-confirm-desc"
+                className="text-[14px] leading-[1.5]"
+                style={{ color: 'var(--color-on-surface-variant)' }}
+              >
+                This will hide <strong>{timer.name}</strong> from your timers list. All its recorded sessions will remain visible in <strong>History</strong> and will continue to count in <strong>Stats</strong>. You can restore it at any time.
+              </p>
+            </div>
+
+            {archiveError && (
+              <p
+                className="text-[13px] px-md py-sm rounded-lg"
+                style={{
+                  color: 'var(--color-on-error-container)',
+                  backgroundColor: 'var(--color-error-container)',
+                }}
+              >
+                {archiveError}
+              </p>
+            )}
+
+            <div className="flex gap-md">
+              <button
+                type="button"
+                onClick={() => { setShowArchiveConfirm(false); setArchiveError(null) }}
+                disabled={isArchiving}
+                className="flex-1 h-12 rounded-xl text-[14px] font-medium transition-colors disabled:opacity-60"
+                style={{
+                  backgroundColor: 'var(--color-surface-container)',
+                  color: 'var(--color-on-surface)',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleArchive}
+                disabled={isArchiving}
+                className="flex-1 h-12 rounded-xl text-[14px] font-semibold transition-all active:scale-[0.98] disabled:opacity-50"
+                style={{
+                  backgroundColor: 'var(--color-secondary)',
+                  color: 'var(--color-on-secondary)',
+                }}
+              >
+                {isArchiving ? 'Archiving…' : 'Archive'}
               </button>
             </div>
           </div>

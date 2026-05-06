@@ -6,6 +6,7 @@ import { saveManualSession, deleteSession } from '@/app/actions/sessions'
 import EditEntryModal, { type TimerOption, type SavePayload } from '@/components/sessions/EditEntryModal'
 import ManualEntryModal, { type ManualSavePayload } from '@/components/sessions/ManualEntryModal'
 import { useTimeFormat, formatLocalTime } from '@/lib/utils/useTimeFormat'
+import { BRAND_ICONS } from '@/lib/utils/timerConstants'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -268,7 +269,7 @@ export default function HistoryClient({ sessions, timers, page, hasMore }: Histo
                   aria-hidden="true"
                 >
                   <i
-                    className={`fa-solid fa-${session.timer_icon} text-[16px] text-white`}
+                    className={`${BRAND_ICONS.has(session.timer_icon) ? 'fa-brands' : 'fa-solid'} fa-${session.timer_icon} text-[16px] text-white`}
                   />
                 </div>
 

@@ -180,3 +180,75 @@ export async function deleteTimer(timerId: string): Promise<void> {
   revalidatePath('/dashboard')
   redirect('/dashboard')
 }
+
+// ─── reorderTimers ────────────────────────────────────────────────────────────
+
+/**
+ * Saves a new order for the user's timers by updating the position field.
+ * Receives an ordered array of timer IDs.
+ */
+export async function reorderTimers(orderedIds: string[]): Promise<TimerActionResult> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Update each timer's position in parallel
+  const updates = orderedIds.map((id, index) =>
+    supabase
+      .from('timers')
+      .update({ position: index, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('user_id', user.id)
+  )
+
+  const results = await Promise.all(updates)
+  const failed = results.find((r) => r.error)
+  if (failed?.error) {
+    return { error: 'Failed to save order. Please try again.' }
+  }
+
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+// ─── archiveTimer ─────────────────────────────────────────────────────────────
+
+export async function archiveTimer(timerId: string): Promise<TimerActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase
+    .from('timers')
+    .update({ is_active: false, updated_at: new Date().toISOString() })
+    .eq('id', timerId)
+    .eq('user_id', user.id)
+
+  if (error) return { error: 'Failed to archive timer.' }
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+// ─── restoreTimer ─────────────────────────────────────────────────────────────
+
+export async function restoreTimer(timerId: string): Promise<TimerActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase
+    .from('timers')
+    .update({ is_active: true, updated_at: new Date().toISOString() })
+    .eq('id', timerId)
+    .eq('user_id', user.id)
+
+  if (error) return { error: 'Failed to restore timer.' }
+  revalidatePath('/dashboard')
+  return { success: true }
+}

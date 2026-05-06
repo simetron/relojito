@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { changePasswordAction, deleteAccountAction } from './actions'
+import { changePasswordAction, deleteAccountAction, saveThemeAction, saveTimeFormatAction } from './actions'
 import { useTimeFormat } from '@/lib/utils/useTimeFormat'
 import type { TimeFormat } from '@/lib/utils/useTimeFormat'
 
@@ -165,18 +165,25 @@ function ChangePasswordForm() {
 
 // ─── Dark Mode Toggle ─────────────────────────────────────────────────────────
 
-function DarkModeToggle() {
-  const [isDark, setIsDark] = useState(false)
+function DarkModeToggle({ initialTheme }: { initialTheme: 'dark' | 'light' }) {
+  const [isDark, setIsDark] = useState(initialTheme === 'dark')
 
-  // Read localStorage on mount (SSR-safe: runs only in browser)
+  // Apply theme on mount from server-provided value
   useEffect(() => {
-    const stored = localStorage.getItem('theme')
-    setIsDark(stored === 'dark')
-  }, [])
+    if (initialTheme === 'dark') {
+      localStorage.setItem('theme', 'dark')
+      document.documentElement.setAttribute('data-theme', 'dark')
+    } else {
+      localStorage.setItem('theme', 'light')
+      document.documentElement.removeAttribute('data-theme')
+    }
+  }, [initialTheme])
 
-  function handleToggleDark() {
+  async function handleToggleDark() {
     const next = !isDark
     setIsDark(next)
+    const theme = next ? 'dark' : 'light'
+    // Apply locally
     if (next) {
       localStorage.setItem('theme', 'dark')
       document.documentElement.setAttribute('data-theme', 'dark')
@@ -184,6 +191,8 @@ function DarkModeToggle() {
       localStorage.setItem('theme', 'light')
       document.documentElement.removeAttribute('data-theme')
     }
+    // Persist to Supabase for cross-device sync
+    await saveThemeAction(theme)
   }
 
   return (
@@ -221,8 +230,18 @@ function DarkModeToggle() {
 
 // ─── Time Format Toggle ───────────────────────────────────────────────────────
 
-function TimeFormatToggle() {
-  const [format, setFormat] = useTimeFormat()
+function TimeFormatToggle({ initialTimeFormat }: { initialTimeFormat: TimeFormat }) {
+  const [format, setFormatLocal] = useTimeFormat()
+
+  // Sync from server value on mount
+  useEffect(() => {
+    setFormatLocal(initialTimeFormat)
+  }, [initialTimeFormat]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleSetFormat(f: TimeFormat) {
+    setFormatLocal(f)
+    await saveTimeFormatAction(f)
+  }
 
   return (
     <div className="flex items-center justify-between gap-md">
@@ -244,7 +263,7 @@ function TimeFormatToggle() {
             <button
               key={option}
               type="button"
-              onClick={() => setFormat(option)}
+              onClick={() => handleSetFormat(option)}
               className="px-md py-sm text-[13px] font-medium transition-colors"
               style={{
                 backgroundColor: isActive
@@ -400,7 +419,11 @@ function DeleteAccountSection() {
 
 // ─── SettingsClient ───────────────────────────────────────────────────────────
 
-export default function SettingsClient({ email }: { email: string }) {
+export default function SettingsClient({ email, initialTheme, initialTimeFormat }: {
+  email: string
+  initialTheme: 'dark' | 'light'
+  initialTimeFormat: TimeFormat
+}) {
   const localPart = emailLocalPart(email)
   const initial = emailInitial(email)
 
@@ -449,9 +472,9 @@ export default function SettingsClient({ email }: { email: string }) {
         <section>
           <SectionHeading>Appearance</SectionHeading>
           <Card className="space-y-lg">
-            <DarkModeToggle />
+            <DarkModeToggle initialTheme={initialTheme} />
             <div style={{ borderTop: '1px solid var(--color-outline-variant)' }} className="pt-lg">
-              <TimeFormatToggle />
+              <TimeFormatToggle initialTimeFormat={initialTimeFormat} />
             </div>
           </Card>
         </section>

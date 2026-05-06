@@ -40,12 +40,15 @@ async function DashboardData() {
     redirect('/login')
   }
 
-  // Fetch timers ordered by created_at ASC
-  const { data: timers } = await supabase
+  // Fetch all timers — active ones shown on dashboard, all passed to reorder modal
+  const { data: allTimers } = await supabase
     .from('timers')
     .select('*')
     .eq('user_id', user.id)
+    .order('position', { ascending: true })
     .order('created_at', { ascending: true })
+
+  const timers = (allTimers ?? []).filter((t) => t.is_active !== false)
 
   // Compute today's UTC midnight
   const now = new Date()
@@ -87,7 +90,8 @@ async function DashboardData() {
 
   return (
     <DashboardClient
-      timers={timers ?? []}
+      timers={timers}
+      allTimers={allTimers ?? []}
       todaySecondsMap={todaySecondsMap}
       dateHeading={dateHeading}
       initialActiveSession={

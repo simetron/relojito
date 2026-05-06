@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { createTimer } from '@/app/actions/timers'
-import { ALLOWED_COLORS, ALLOWED_ICONS, type TimerActionResult } from '@/lib/utils/timerConstants'
+import { ALLOWED_COLORS, ALLOWED_ICONS, BRAND_ICONS, type TimerActionResult } from '@/lib/utils/timerConstants'
 
 // ─── Color swatch metadata ────────────────────────────────────────────────────
 
@@ -14,23 +14,11 @@ const COLOR_SWATCHES: { hex: string; label: string }[] = [
   { hex: '#F59E0B', label: 'Amber' },
   { hex: '#8B5CF6', label: 'Purple' },
   { hex: '#0EA5E9', label: 'Sky' },
-]
-
-// ─── Icon metadata ────────────────────────────────────────────────────────────
-
-const ICON_OPTIONS: { name: string; label: string }[] = [
-  { name: 'person-running', label: 'Running' },
-  { name: 'book-open', label: 'Reading' },
-  { name: 'person-praying', label: 'Meditation' },
-  { name: 'dumbbell', label: 'Workout' },
-  { name: 'code', label: 'Coding' },
-  { name: 'headphones', label: 'Music' },
-  { name: 'mug-saucer', label: 'Coffee' },
-  { name: 'paintbrush', label: 'Art' },
-  { name: 'moon', label: 'Sleep' },
-  { name: 'briefcase', label: 'Work' },
-  { name: 'music', label: 'Instrument' },
-  { name: 'pen-to-square', label: 'Writing' },
+  { hex: '#EC4899', label: 'Pink' },
+  { hex: '#374151', label: 'Dark Grey' },
+  { hex: '#F97316', label: 'Orange' },
+  { hex: '#166534', label: 'Dark Green' },
+  { hex: '#84CC16', label: 'Lime' },
 ]
 
 // ─── Random defaults ──────────────────────────────────────────────────────────
@@ -49,7 +37,7 @@ interface CreateTimerModalProps {
 
 export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
   const [selectedColor, setSelectedColor] = useState<string>(() => randomPick(COLOR_SWATCHES).hex)
-  const [selectedIcon, setSelectedIcon] = useState<string>(() => randomPick(ICON_OPTIONS).name)
+  const [selectedIcon, setSelectedIcon] = useState<string>(() => randomPick(ALLOWED_ICONS))
   const [nameValue, setNameValue] = useState('')
 
   const [state, setState] = useState<TimerActionResult | null>(null)
@@ -246,7 +234,7 @@ export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
               </div>
             </div>
 
-            {/* Icon picker */}
+            {/* Icon picker — flat grid */}
             <div className="space-y-sm">
               <label
                 className="text-[12px] font-medium tracking-[0.02em] uppercase"
@@ -255,30 +243,24 @@ export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
                 Icon
               </label>
               <div className="grid grid-cols-6 gap-sm">
-                {ICON_OPTIONS.map((icon) => {
-                  const isSelected = selectedIcon === icon.name
+                {ALLOWED_ICONS.map((iconName) => {
+                  const isSelected = selectedIcon === iconName
                   return (
                     <button
-                      key={icon.name}
+                      key={iconName}
                       type="button"
-                      onClick={() => setSelectedIcon(icon.name)}
+                      onClick={() => setSelectedIcon(iconName)}
                       className="aspect-square flex items-center justify-center rounded-lg transition-colors"
                       style={{
-                        backgroundColor: isSelected
-                          ? 'var(--color-primary-container)'
-                          : 'transparent',
-                        color: isSelected
-                          ? 'var(--color-on-primary-container)'
-                          : 'var(--color-on-surface-variant)',
-                        border: isSelected
-                          ? '1px solid var(--color-outline-variant)'
-                          : '1px solid transparent',
+                        backgroundColor: 'transparent',
+                        color: isSelected ? 'var(--color-on-surface)' : 'var(--color-on-surface-variant)',
+                        border: isSelected ? '2px solid var(--color-primary)' : '1px solid transparent',
                       }}
-                      aria-label={`${icon.label}${isSelected ? ' (selected)' : ''}`}
+                      aria-label={iconName}
                       aria-pressed={isSelected}
-                      title={icon.label}
+                      title={iconName}
                     >
-                      <i className={`fa-solid fa-${icon.name} text-[18px]`} aria-hidden="true" />
+                      <i className={`${BRAND_ICONS.has(iconName) ? 'fa-brands' : 'fa-solid'} fa-${iconName} text-[18px]`} aria-hidden="true" />
                     </button>
                   )
                 })}
