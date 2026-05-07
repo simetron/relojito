@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from 'react'
 import { getStatsData, type TimerStat } from '@/app/actions/stats'
 import DonutChart from '@/components/stats/DonutChart'
 import { BRAND_ICONS } from '@/lib/utils/timerConstants'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ export default function StatsClient({
   initialStats,
   initialError,
 }: StatsClientProps) {
+  const { t } = useTranslation()
   const [rangeDays, setRangeDays] = useState<7 | 30>(7)
   const [stats, setStats] = useState<TimerStat[]>(initialStats)
   const [fetchError, setFetchError] = useState<string | undefined>(initialError)
@@ -75,7 +77,7 @@ export default function StatsClient({
           className="text-[32px] leading-[1.2] tracking-[-0.02em] font-semibold"
           style={{ color: 'var(--color-primary)' }}
         >
-          Stats
+          {t('stats.title')}
         </h1>
       </div>
 
@@ -100,7 +102,7 @@ export default function StatsClient({
             }
             aria-pressed={rangeDays === days}
           >
-            {days} days
+            {days === 7 ? t('stats.7days') : t('stats.30days')}
           </button>
         ))}
       </div>
@@ -137,7 +139,7 @@ export default function StatsClient({
           >
             <i className="fa-solid fa-clock text-[40px] opacity-30" aria-hidden="true" />
             <p className="text-[14px] text-center">
-              No sessions in the last {rangeDays} days. Start a timer to begin tracking.
+              {t('stats.empty').replace('{days}', String(rangeDays))}
             </p>
           </div>
         )}

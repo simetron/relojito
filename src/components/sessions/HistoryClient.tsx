@@ -7,6 +7,7 @@ import EditEntryModal, { type TimerOption, type SavePayload } from '@/components
 import ManualEntryModal, { type ManualSavePayload } from '@/components/sessions/ManualEntryModal'
 import { useTimeFormat, formatLocalTime } from '@/lib/utils/useTimeFormat'
 import { BRAND_ICONS } from '@/lib/utils/timerConstants'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,19 +43,19 @@ function toLocalDateString(utcIso: string): string {
  * Returns "Today", "Yesterday", or e.g. "Monday, July 24".
  * Satisfies Req 6.1 (day grouping with local timezone).
  */
-function formatDayLabel(localDate: string): string {
+function formatDayLabel(localDate: string, todayLabel: string, yesterdayLabel: string, locale: string): string {
   const today = toLocalDateString(new Date().toISOString())
-  if (localDate === today) return 'Today'
+  if (localDate === today) return todayLabel
 
   const yesterday = new Date()
   yesterday.setDate(yesterday.getDate() - 1)
   const yesterdayStr = toLocalDateString(yesterday.toISOString())
-  if (localDate === yesterdayStr) return 'Yesterday'
+  if (localDate === yesterdayStr) return yesterdayLabel
 
   // Parse the YYYY-MM-DD as a local date (avoid UTC offset issues)
   const [year, month, day] = localDate.split('-').map(Number)
   const d = new Date(year, month - 1, day)
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString(locale, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -65,7 +66,7 @@ function formatDayLabel(localDate: string): string {
  * Group sessions by local calendar date, sorted descending.
  * Satisfies Req 6.1 and 6.2.
  */
-function groupSessionsByDay(sessions: HistorySession[]): DayGroup[] {
+function groupSessionsByDay(sessions: HistorySession[], todayLabel: string, yesterdayLabel: string, locale: string): DayGroup[] {
   const map = new Map<string, HistorySession[]>()
 
   for (const session of sessions) {
@@ -83,7 +84,7 @@ function groupSessionsByDay(sessions: HistorySession[]): DayGroup[] {
 
   return sortedDates.map((date) => ({
     date,
-    label: formatDayLabel(date),
+    label: formatDayLabel(date, todayLabel, yesterdayLabel, locale),
     sessions: map.get(date)!,
   }))
 }
@@ -114,6 +115,7 @@ function formatDuration(seconds: number): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function HistoryClient({ sessions, timers, page, hasMore }: HistoryClientProps) {
+  const { t, locale } = useTranslation()
   const [selectedSession, setSelectedSession] = useState<HistorySession | null>(null)
   const [showManualEntry, setShowManualEntry] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -121,7 +123,10 @@ export default function HistoryClient({ sessions, timers, page, hasMore }: Histo
   const [timeFormat] = useTimeFormat()
 
   // Group sessions by local calendar date (client-side, uses browser timezone)
-  const dayGroups = useMemo(() => groupSessionsByDay(sessions), [sessions])
+  const dayGroups = useMemo(
+    () => groupSessionsByDay(sessions, t('history.today'), t('history.yesterday'), locale),
+    [sessions, t, locale]
+  )
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -183,7 +188,7 @@ export default function HistoryClient({ sessions, timers, page, hasMore }: Histo
           className="text-[32px] leading-[1.2] tracking-[-0.02em] font-semibold"
           style={{ color: 'var(--color-primary)' }}
         >
-          History
+          {t('history.title')}
         </h1>
       </div>
 
@@ -221,7 +226,7 @@ export default function HistoryClient({ sessions, timers, page, hasMore }: Histo
         >
           <i className="fa-solid fa-clock-rotate-left text-[40px] opacity-30" aria-hidden="true" />
           <p className="text-[14px] text-center">
-            No sessions yet. Start a timer to begin tracking.
+            {t('history.empty')}
           </p>
         </div>
       )}
@@ -244,7 +249,7 @@ export default function HistoryClient({ sessions, timers, page, hasMore }: Histo
                 color: 'var(--color-outline)',
               }}
             >
-              {group.sessions.length} {group.sessions.length === 1 ? 'session' : 'sessions'}
+              {group.sessions.length} {group.sessions.length === 1 ? t('history.sessions_one') : t('history.sessions_other')}
             </span>
           </header>
 
@@ -321,7 +326,7 @@ export default function HistoryClient({ sessions, timers, page, hasMore }: Histo
             className="text-[12px]"
             style={{ color: 'var(--color-outline)' }}
           >
-            Showing first {sessions.length} sessions. Older sessions not shown.
+            {t('history.showingFirst').replace('{count}', String(sessions.length))}
           </p>
         </div>
       )}
@@ -335,7 +340,7 @@ export default function HistoryClient({ sessions, timers, page, hasMore }: Histo
           backgroundColor: 'var(--color-secondary)',
           color: 'var(--color-on-secondary)',
         }}
-        aria-label="Add manual time entry"
+        aria-label={t('history.addEntry')}
       >
         <i className="fa-solid fa-plus text-[20px]" aria-hidden="true" />
       </button>

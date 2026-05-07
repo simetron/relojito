@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react'
 import TimerCard from '@/components/timers/TimerCard'
 import CreateTimerModal from '@/components/timers/CreateTimerModal'
 import ReorderModal from '@/components/timers/ReorderModal'
-import RecoveryBanner from '@/components/layout/RecoveryBanner'
 import type { Timer, ActiveSession } from '@/components/timers/TimerCard'
 import { startTimer, stopTimer } from '@/app/actions/sessions'
 import { useRealtimeSession } from '@/lib/realtime/RealtimeSessionContext'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -16,8 +16,19 @@ interface DashboardClientProps {
   allTimers: Timer[]
   todaySecondsMap: Record<string, number>
   dateHeading: string
-  /** Pre-existing active session loaded server-side (if any) */
-  initialActiveSession?: ActiveSession & { timer_id: string; timerName: string }
+  initialActiveSession?: ActiveSession & { timer_id: string }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Format a Date as "Month Day" in the given locale (e.g. "May 4" or "4 de mayo").
+ */
+function formatDateHeadingLocale(date: Date, locale: string): string {
+  return date.toLocaleDateString(locale, {
+    month: 'long',
+    day: 'numeric',
+  })
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -29,39 +40,20 @@ export default function DashboardClient({
   dateHeading,
   initialActiveSession,
 }: DashboardClientProps) {
+  const { t, locale } = useTranslation()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showReorderModal, setShowReorderModal] = useState(false)
   const [shortSessionToast, setShortSessionToast] = useState(false)
 
-  // Track which timer has an active session and the session details
+  // Compute locale-aware date heading on the client
+  const localizedDateHeading = formatDateHeadingLocale(new Date(), locale)
+
   const [activeTimerId, setActiveTimerId] = useState<string | null>(
     initialActiveSession?.timer_id ?? null
   )
   const [activeSession, setActiveSession] = useState<(ActiveSession & { timer_id: string }) | null>(
     initialActiveSession ?? null
   )
-
-  // Recovery banner: only show for sessions the user hasn't acknowledged yet.
-  // We use sessionStorage to remember which session IDs have been seen,
-  // so navigating away and back doesn't re-show the banner for a running timer.
-  const [showRecovery, setShowRecovery] = useState(false)
-  const [userStarted, setUserStarted] = useState(false)
-
-  useEffect(() => {
-    if (!initialActiveSession) return
-    const key = `recovery-seen-${initialActiveSession.id}`
-    const alreadySeen = sessionStorage.getItem(key)
-    if (!alreadySeen) {
-      setShowRecovery(true)
-    }
-  }, [initialActiveSession?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const dismissRecovery = () => {
-    if (initialActiveSession) {
-      sessionStorage.setItem(`recovery-seen-${initialActiveSession.id}`, '1')
-    }
-    setShowRecovery(false)
-  }
 
   // ─── Realtime sync ──────────────────────────────────────────────────────────
 
@@ -72,12 +64,8 @@ export default function DashboardClient({
 
     const { eventType } = lastPayload
 
-    // Task 7.2 — INSERT: a new session was started (possibly on another device)
     if (eventType === 'INSERT') {
       const newRow = lastPayload.new
-      // Only act if this is an active session (no end_time) and it's not
-      // already the session we're tracking (avoids double-applying our own
-      // optimistic update).
       if (newRow.end_time === null && newRow.id !== activeSession?.id) {
         setActiveTimerId(newRow.timer_id)
         setActiveSession({
@@ -88,11 +76,9 @@ export default function DashboardClient({
       }
     }
 
-    // Task 7.3 — UPDATE: a session was stopped (end_time is now set)
     if (eventType === 'UPDATE') {
       const updatedRow = lastPayload.new
       if (updatedRow.end_time !== null) {
-        // Only clear state if this update is for the currently active session
         if (updatedRow.id === activeSession?.id || updatedRow.timer_id === activeTimerId) {
           setActiveTimerId(null)
           setActiveSession(null)
@@ -102,11 +88,6 @@ export default function DashboardClient({
   }, [lastPayload]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStart = async (timer: Timer) => {
-    // User is starting a timer themselves — dismiss recovery banner
-    dismissRecovery()
-    setUserStarted(true)
-
-    // Optimistically update UI before server responds
     const optimisticSession = {
       id: 'pending',
       timer_id: timer.id,
@@ -118,14 +99,12 @@ export default function DashboardClient({
     const result = await startTimer(timer.id)
 
     if (result.error) {
-      // Revert optimistic update on error
       setActiveTimerId(null)
       setActiveSession(null)
       console.error('Failed to start timer:', result.error)
       return
     }
 
-    // Update with real session data from server
     if (result.data) {
       setActiveSession({
         id: result.data.id,
@@ -136,7 +115,6 @@ export default function DashboardClient({
   }
 
   const handleStop = async (sessionId: string) => {
-    // Optimistically clear running state
     setActiveTimerId(null)
     setActiveSession(null)
 
@@ -146,7 +124,6 @@ export default function DashboardClient({
       console.error('Failed to stop timer:', result.error)
     }
 
-    // Session was under 60s — auto-deleted, show a brief notice
     if (result.discarded) {
       setShortSessionToast(true)
       setTimeout(() => setShortSessionToast(false), 4000)
@@ -162,17 +139,16 @@ export default function DashboardClient({
             className="text-[32px] leading-[1.2] tracking-[-0.02em] font-semibold"
             style={{ color: 'var(--color-primary)' }}
           >
-            {dateHeading}
+            {localizedDateHeading}
           </h1>
           <p
             className="text-[14px] leading-[1.5]"
             style={{ color: 'var(--color-on-surface-variant)' }}
           >
-            Time flies either way. Make it count.
+            {t('dashboard.tagline')}
           </p>
         </div>
 
-        {/* Reorder button — shown when there are 2+ active timers or any archived */}
         {(timers.length > 1 || allTimers.some(t => !t.is_active)) && (
           <button
             type="button"
@@ -193,7 +169,6 @@ export default function DashboardClient({
       {/* Timer list */}
       {timers.length === 0 ? (
         <div className="flex flex-col gap-md">
-          {/* Empty state + add button as dashed card */}
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
@@ -207,7 +182,7 @@ export default function DashboardClient({
           >
             <i className="fa-solid fa-clock text-[40px] opacity-30" aria-hidden="true" />
             <p className="text-[14px] text-center">
-              No timers yet. Tap <strong>New Timer +</strong> to create your first one.
+              {t('dashboard.noTimers')}
             </p>
           </button>
         </div>
@@ -234,7 +209,6 @@ export default function DashboardClient({
             )
           })}
 
-          {/* Add new timer — dashed card at the bottom of the list */}
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
@@ -246,7 +220,7 @@ export default function DashboardClient({
             }}
             aria-label="Create new timer"
           >
-            <span className="text-[14px] font-medium">New Timer +</span>
+            <span className="text-[14px] font-medium">{t('dashboard.newTimer')}</span>
           </button>
         </div>
       )}
@@ -264,33 +238,18 @@ export default function DashboardClient({
           }}
         >
           <i className="fa-solid fa-clock text-[14px] flex-shrink-0" style={{ color: 'var(--color-outline)' }} aria-hidden="true" />
-          Session not saved — Relojito only records sessions of 1 minute or more.
+          {t('dashboard.shortSession')}
         </div>
       )}
 
-      {/* Create timer modal */}
       {showCreateModal && (
         <CreateTimerModal onClose={() => setShowCreateModal(false)} />
       )}
 
-      {/* Reorder modal */}
       {showReorderModal && (
         <ReorderModal
           timers={allTimers}
           onClose={() => setShowReorderModal(false)}
-        />
-      )}
-
-      {/* Recovery banner — only shown for unacknowledged orphaned sessions */}
-      {showRecovery && !userStarted && initialActiveSession && (
-        <RecoveryBanner
-          sessionId={initialActiveSession.id}
-          timerName={initialActiveSession.timerName}
-          onDismiss={() => {
-            dismissRecovery()
-            setActiveTimerId(null)
-            setActiveSession(null)
-          }}
         />
       )}
     </div>

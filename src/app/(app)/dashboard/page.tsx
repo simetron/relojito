@@ -73,20 +73,14 @@ async function DashboardData() {
 
   const dateHeading = formatDateHeading(now)
 
-  // Fetch the active session (if any) to pass to DashboardClient
+  // Fetch the active session (if any) to initialise the running timer state
   const { data: activeSessionRow } = await supabase
     .from('sessions')
-    .select('id, timer_id, start_time, timers(name)')
+    .select('id, timer_id, start_time')
     .eq('user_id', user.id)
     .is('end_time', null)
     .limit(1)
     .maybeSingle()
-
-  const activeTimerName = activeSessionRow?.timers
-    ? (Array.isArray(activeSessionRow.timers)
-        ? (activeSessionRow.timers[0] as { name: string })?.name
-        : (activeSessionRow.timers as unknown as { name: string }).name)
-    : ''
 
   return (
     <DashboardClient
@@ -100,7 +94,6 @@ async function DashboardData() {
               id: activeSessionRow.id,
               timer_id: activeSessionRow.timer_id,
               start_time: activeSessionRow.start_time,
-              timerName: activeTimerName,
             }
           : undefined
       }

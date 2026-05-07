@@ -37,6 +37,24 @@ export async function saveTimeFormatAction(timeFormat: '12h' | '24h'): Promise<{
   return {}
 }
 
+export async function saveLanguageAction(language: 'en' | 'es'): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { error } = await supabase.auth.updateUser({
+    data: { language },
+  })
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function saveLanguageAction(lang: 'en' | 'es'): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { error } = await supabase.auth.updateUser({
+    data: { language: lang },
+  })
+  if (error) return { error: error.message }
+  return {}
+}
+
 export async function deleteAccountAction() {
   const supabase = await createClient()
 

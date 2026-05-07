@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import TimeInput from './TimeInput'
 import { useTimeFormat } from '@/lib/utils/useTimeFormat'
 import { BRAND_ICONS } from '@/lib/utils/timerConstants'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,6 +70,7 @@ export default function ManualEntryModal({
   onClose,
   onSave,
 }: ManualEntryModalProps) {
+  const { t } = useTranslation()
   // ── Form state ─────────────────────────────────────────────────────────────
   const [selectedTimerId, setSelectedTimerId] = useState<string>(timers[0]?.id ?? '')
   const [dateValue, setDateValue] = useState<string>(todayLocalDateValue())
@@ -141,15 +143,15 @@ export default function ManualEntryModal({
     const start = combineDateAndTime(dateValue, startTimeValue)
     const end = combineDateAndTime(dateValue, endTimeValue)
     if (!start || !end || end.getTime() <= start.getTime()) {
-      setValidationError('End time must be after start time.')
+      setValidationError(t('entryModal.errorEndAfterStart'))
       return
     }
     if (start.getTime() > now.getTime()) {
-      setValidationError('Start time cannot be in the future.')
+      setValidationError(t('entryModal.errorStartFuture'))
       return
     }
     if (end.getTime() > now.getTime()) {
-      setValidationError('End time cannot be in the future.')
+      setValidationError(t('entryModal.errorEndFuture'))
       return
     }
     setValidationError(null)
@@ -193,7 +195,7 @@ export default function ManualEntryModal({
             className="text-[18px] font-semibold leading-[1.4]"
             style={{ color: 'var(--color-on-surface)' }}
           >
-            New Entry
+            {t('entryModal.newEntry')}
           </h2>
           <button
             type="button"
@@ -215,7 +217,7 @@ export default function ManualEntryModal({
               className="block text-[12px] font-medium tracking-[0.02em] uppercase mb-md"
               style={{ color: 'var(--color-outline)' }}
             >
-              Activity
+              {t('entryModal.activity')}
             </label>
             <div className="grid grid-cols-4 gap-sm">
               {timers.map((timer) => {
@@ -267,7 +269,7 @@ export default function ManualEntryModal({
               className="block text-[12px] font-medium tracking-[0.02em] uppercase mb-md"
               style={{ color: 'var(--color-outline)' }}
             >
-              Date
+              {t('entryModal.date')}
             </label>
             <div
               className="flex items-center gap-sm px-md rounded-xl"
@@ -301,7 +303,7 @@ export default function ManualEntryModal({
                 className="block text-[12px] font-medium tracking-[0.02em] uppercase mb-md"
                 style={{ color: 'var(--color-outline)' }}
               >
-                Start Time
+                {t('entryModal.startTime')}
               </label>
               <TimeInput
                 id="manual-entry-start"
@@ -322,7 +324,7 @@ export default function ManualEntryModal({
                 className="block text-[12px] font-medium tracking-[0.02em] uppercase mb-md"
                 style={{ color: 'var(--color-outline)' }}
               >
-                End Time
+                {t('entryModal.endTime')}
               </label>
               <TimeInput
                 id="manual-entry-end"
@@ -353,7 +355,7 @@ export default function ManualEntryModal({
               className="text-[12px] font-medium tracking-[0.02em] uppercase"
               style={{ color: 'var(--color-outline)' }}
             >
-              Duration
+              {t('entryModal.duration')}
             </span>
             <span
               className="text-[18px] font-semibold leading-[1.4] tracking-[-0.01em]"
@@ -383,7 +385,7 @@ export default function ManualEntryModal({
             className="h-12 px-md text-[14px] font-medium transition-colors active:opacity-70"
             style={{ color: 'var(--color-on-surface-variant)' }}
           >
-            Cancel
+            {t('entryModal.cancel')}
           </button>
 
           {/* Register button */}
@@ -397,7 +399,7 @@ export default function ManualEntryModal({
               color: 'var(--color-on-secondary)',
             }}
           >
-            Register
+            {t('entryModal.register')}
           </button>
         </div>
       </div>

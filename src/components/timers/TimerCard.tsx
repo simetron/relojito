@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import EditTimerModal from './EditTimerModal'
 import { formatHHMMSS } from '@/lib/utils/time'
 import { BRAND_ICONS } from '@/lib/utils/timerConstants'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,14 +39,17 @@ interface TimerCardProps {
 /**
  * Format total seconds as a human-readable "Today: Xm" or "Today: 1h 23m" string.
  * Returns null if there are no sessions today.
+ * The prefix label is passed in to support i18n.
  */
-function formatTodayTime(totalSeconds: number): string | null {
+function formatTodayTime(totalSeconds: number, todayLabel: string): string | null {
   if (totalSeconds <= 0) return null
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
-  if (hours > 0 && minutes > 0) return `Today: ${hours}h ${minutes}m`
-  if (hours > 0) return `Today: ${hours}h`
-  return `Today: ${minutes}m`
+  let timeStr: string
+  if (hours > 0 && minutes > 0) timeStr = `${hours}h ${minutes}m`
+  else if (hours > 0) timeStr = `${hours}h`
+  else timeStr = `${minutes}m`
+  return todayLabel.replace('{time}', timeStr)
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -58,6 +62,7 @@ export default function TimerCard({
   activeSession,
   disabled = false,
 }: TimerCardProps) {
+  const { t } = useTranslation()
   const [showEditModal, setShowEditModal] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -152,7 +157,7 @@ export default function TimerCard({
           onClick={handleStopClick}
           aria-label={`Stop ${timer.name}`}
         >
-          STOP
+          {t('timer.stop')}
         </button>
       </div>
     )
@@ -201,12 +206,12 @@ export default function TimerCard({
             >
               {timer.name}
             </h3>
-            {formatTodayTime(todaySeconds) && (
+            {formatTodayTime(todaySeconds, t('timer.todayTime')) && (
               <p
                 className="text-[14px] leading-[1.5] mt-[2px] truncate"
                 style={{ color: 'var(--color-on-surface-variant)' }}
               >
-                {formatTodayTime(todaySeconds)}
+                {formatTodayTime(todaySeconds, t('timer.todayTime'))}
               </p>
             )}
           </div>
@@ -230,7 +235,7 @@ export default function TimerCard({
           aria-label={`Start ${timer.name}`}
           aria-disabled={disabled}
         >
-          START
+          {t('timer.start')}
         </button>
       </div>
 

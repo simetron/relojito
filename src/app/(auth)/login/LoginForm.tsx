@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { loginAction, forgotPasswordAction } from './actions'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 export function LoginForm() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [error, setError] = useState<string | null>(null)
   const [forgotMessage, setForgotMessage] = useState<string | null>(null)
   const [showForgot, setShowForgot] = useState(false)
@@ -59,10 +61,10 @@ export function LoginForm() {
       <form onSubmit={handleForgotPassword} className="space-y-md">
         <div>
           <h2 className="text-[18px] leading-[1.4] tracking-[-0.01em] font-medium text-on-surface mb-xs">
-            Reset Password
+            {t('auth.resetPassword')}
           </h2>
           <p className="text-[14px] text-on-surface-variant">
-            Enter your email and we&apos;ll send you a reset link.
+            {t('auth.resetPasswordDesc')}
           </p>
         </div>
 
@@ -77,7 +79,7 @@ export function LoginForm() {
             className="text-[12px] leading-[1] tracking-[0.02em] font-medium text-on-surface-variant block px-1"
             htmlFor="forgot-email"
           >
-            Email Address
+            {t('auth.emailAddress')}
           </label>
           <input
             className="w-full h-11 px-md rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"

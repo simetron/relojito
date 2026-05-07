@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import TimeInput from './TimeInput'
 import { useTimeFormat } from '@/lib/utils/useTimeFormat'
 import { BRAND_ICONS } from '@/lib/utils/timerConstants'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -92,6 +93,7 @@ export default function EditEntryModal({
   onSave,
   onDelete,
 }: EditEntryModalProps) {
+  const { t } = useTranslation()
   // ── Form state ─────────────────────────────────────────────────────────────
   const [selectedTimerId, setSelectedTimerId] = useState<string>(session.timer_id)
   const [dateValue, setDateValue] = useState<string>(toLocalDateValue(session.start_time))
@@ -169,15 +171,15 @@ export default function EditEntryModal({
     const start = combineDateAndTime(dateValue, startTimeValue)
     const end = combineDateAndTime(dateValue, endTimeValue)
     if (!start || !end || end.getTime() <= start.getTime()) {
-      setValidationError('End time must be after start time.')
+      setValidationError(t('entryModal.errorEndAfterStart'))
       return
     }
     if (start.getTime() > now.getTime()) {
-      setValidationError('Start time cannot be in the future.')
+      setValidationError(t('entryModal.errorStartFuture'))
       return
     }
     if (end.getTime() > now.getTime()) {
-      setValidationError('End time cannot be in the future.')
+      setValidationError(t('entryModal.errorEndFuture'))
       return
     }
     setValidationError(null)
@@ -226,7 +228,7 @@ export default function EditEntryModal({
             className="text-[18px] font-semibold leading-[1.4]"
             style={{ color: 'var(--color-on-surface)' }}
           >
-            Edit Entry
+            {t('entryModal.editEntry')}
           </h2>
           <button
             type="button"
@@ -248,7 +250,7 @@ export default function EditEntryModal({
               className="block text-[12px] font-medium tracking-[0.02em] uppercase mb-md"
               style={{ color: 'var(--color-outline)' }}
             >
-              Activity
+              {t('entryModal.activity')}
             </label>
             <div className="grid grid-cols-4 gap-sm">
               {timers.map((timer) => {
@@ -300,7 +302,7 @@ export default function EditEntryModal({
               className="block text-[12px] font-medium tracking-[0.02em] uppercase mb-md"
               style={{ color: 'var(--color-outline)' }}
             >
-              Date
+              {t('entryModal.date')}
             </label>
             <div
               className="flex items-center gap-sm px-md rounded-xl"
@@ -334,7 +336,7 @@ export default function EditEntryModal({
                 className="block text-[12px] font-medium tracking-[0.02em] uppercase mb-md"
                 style={{ color: 'var(--color-outline)' }}
               >
-                Start Time
+                {t('entryModal.startTime')}
               </label>
               <TimeInput
                 id="edit-entry-start"
@@ -355,7 +357,7 @@ export default function EditEntryModal({
                 className="block text-[12px] font-medium tracking-[0.02em] uppercase mb-md"
                 style={{ color: 'var(--color-outline)' }}
               >
-                End Time
+                {t('entryModal.endTime')}
               </label>
               <TimeInput
                 id="edit-entry-end"
@@ -386,7 +388,7 @@ export default function EditEntryModal({
               className="text-[12px] font-medium tracking-[0.02em] uppercase"
               style={{ color: 'var(--color-outline)' }}
             >
-              Duration
+              {t('entryModal.duration')}
             </span>
             <span
               className="text-[18px] font-semibold leading-[1.4] tracking-[-0.01em]"
@@ -418,7 +420,7 @@ export default function EditEntryModal({
             aria-label="Delete this session"
           >
             <i className="fa-solid fa-trash-can" aria-hidden="true" />
-            Delete
+            {t('entryModal.delete')}
           </button>
 
           <div className="flex-1" />
@@ -430,7 +432,7 @@ export default function EditEntryModal({
             className="h-12 px-md text-[14px] font-medium transition-colors active:opacity-70"
             style={{ color: 'var(--color-on-surface-variant)' }}
           >
-            Cancel
+            {t('entryModal.cancel')}
           </button>
 
           {/* Save button */}
@@ -444,7 +446,7 @@ export default function EditEntryModal({
               color: 'var(--color-on-secondary)',
             }}
           >
-            Save
+            {t('entryModal.save')}
           </button>
         </div>
       </div>
@@ -472,14 +474,14 @@ export default function EditEntryModal({
                 className="text-[18px] font-semibold"
                 style={{ color: 'var(--color-on-surface)' }}
               >
-                Delete this session?
+                {t('entryModal.deleteTitle')}
               </h3>
               <p
                 id="delete-session-desc"
                 className="text-[14px] leading-[1.5]"
                 style={{ color: 'var(--color-on-surface-variant)' }}
               >
-                This will permanently delete the session. This cannot be undone.
+                {t('entryModal.deleteDesc')}
               </p>
             </div>
 
@@ -493,7 +495,7 @@ export default function EditEntryModal({
                   color: 'var(--color-on-surface)',
                 }}
               >
-                Cancel
+                {t('entryModal.cancel')}
               </button>
               <button
                 type="button"
@@ -504,7 +506,7 @@ export default function EditEntryModal({
                   color: 'var(--color-on-error)',
                 }}
               >
-                Delete
+                {t('entryModal.delete')}
               </button>
             </div>
           </div>

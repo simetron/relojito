@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { createTimer } from '@/app/actions/timers'
 import { ALLOWED_COLORS, ALLOWED_ICONS, BRAND_ICONS, type TimerActionResult } from '@/lib/utils/timerConstants'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 // ─── Color swatch metadata ────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ interface CreateTimerModalProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
+  const { t } = useTranslation()
   const [selectedColor, setSelectedColor] = useState<string>(() => randomPick(COLOR_SWATCHES).hex)
   const [selectedIcon, setSelectedIcon] = useState<string>(() => randomPick(ALLOWED_ICONS))
   const [nameValue, setNameValue] = useState('')
@@ -113,7 +115,7 @@ export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
             className="text-[18px] font-semibold leading-[1.4]"
             style={{ color: 'var(--color-on-surface)' }}
           >
-            New Timer
+            {t('timerModal.newTimer')}
           </h2>
           <button
             type="button"
@@ -171,8 +173,8 @@ export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
                   className="text-[12px] font-medium tracking-[0.02em] uppercase"
                   style={{ color: 'var(--color-outline)' }}
                 >
-                  Name
-                </label>
+                {t('timerModal.name')}
+              </label>
                 <span
                   className="text-[12px]"
                   style={{
@@ -209,7 +211,7 @@ export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
                 className="text-[12px] font-medium tracking-[0.02em] uppercase"
                 style={{ color: 'var(--color-outline)' }}
               >
-                Color
+                {t('timerModal.color')}
               </label>
               <div className="flex flex-wrap gap-md">
                 {COLOR_SWATCHES.map((swatch) => {
@@ -240,7 +242,7 @@ export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
                 className="text-[12px] font-medium tracking-[0.02em] uppercase"
                 style={{ color: 'var(--color-outline)' }}
               >
-                Icon
+                {t('timerModal.icon')}
               </label>
               <div className="grid grid-cols-6 gap-sm">
                 {ALLOWED_ICONS.map((iconName) => {
@@ -279,7 +281,7 @@ export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
               className="flex-1 h-12 rounded-xl text-[14px] font-medium transition-colors"
               style={{ color: 'var(--color-on-surface-variant)' }}
             >
-              Cancel
+              {t('timerModal.cancel')}
             </button>
             <button
               type="submit"
@@ -290,7 +292,7 @@ export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
                 color: 'var(--color-on-secondary)',
               }}
             >
-              {isPending ? 'Creating…' : 'Create'}
+              {isPending ? t('timerModal.creating') : t('timerModal.create')}
             </button>
           </div>
         </form>

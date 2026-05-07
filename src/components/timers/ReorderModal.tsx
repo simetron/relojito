@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { reorderTimers, restoreTimer } from '@/app/actions/timers'
 import type { Timer } from '@/components/timers/TimerCard'
 import { BRAND_ICONS } from '@/lib/utils/timerConstants'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 interface ReorderModalProps {
   timers: Timer[]
@@ -13,6 +14,7 @@ interface ReorderModalProps {
 }
 
 export default function ReorderModal({ timers, onClose }: ReorderModalProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const activeTimers = timers.filter((t) => t.is_active !== false)
   const archivedTimers = timers.filter((t) => t.is_active === false)
@@ -44,7 +46,7 @@ export default function ReorderModal({ timers, onClose }: ReorderModalProps) {
     const result = await reorderTimers(order.map((t) => t.id))
     setIsSaving(false)
     if (result.error) {
-      setError(result.error)
+      setError(t('reorder.errorSaveOrder'))
       return
     }
     onClose()
@@ -56,7 +58,7 @@ export default function ReorderModal({ timers, onClose }: ReorderModalProps) {
     const result = await restoreTimer(timerId)
     setRestoringId(null)
     if (result.error) {
-      setError(result.error)
+      setError(t('reorder.errorRestoreTimer'))
       return
     }
     router.refresh()
@@ -91,7 +93,7 @@ export default function ReorderModal({ timers, onClose }: ReorderModalProps) {
             className="text-[18px] font-semibold leading-[1.4]"
             style={{ color: 'var(--color-on-surface)' }}
           >
-            Reorder Timers
+            {t('reorder.title')}
           </h2>
           <button
             type="button"
@@ -177,7 +179,7 @@ export default function ReorderModal({ timers, onClose }: ReorderModalProps) {
                   className="text-[11px] font-medium tracking-[0.04em] uppercase"
                   style={{ color: 'var(--color-outline)' }}
                 >
-                  Archived
+                  {t('reorder.archived')}
                 </p>
               </div>
               {archivedTimers.map((timer) => (
@@ -213,7 +215,7 @@ export default function ReorderModal({ timers, onClose }: ReorderModalProps) {
                     }}
                     aria-label={`Restore ${timer.name}`}
                   >
-                    {restoringId === timer.id ? '…' : 'Restore'}
+                    {restoringId === timer.id ? '…' : t('reorder.restore')}
                   </button>
                 </div>
               ))}
@@ -232,7 +234,7 @@ export default function ReorderModal({ timers, onClose }: ReorderModalProps) {
             className="flex-1 h-12 rounded-xl text-[14px] font-medium transition-colors"
             style={{ color: 'var(--color-on-surface-variant)' }}
           >
-            Cancel
+            {t('reorder.cancel')}
           </button>
           <button
             type="button"
@@ -244,7 +246,7 @@ export default function ReorderModal({ timers, onClose }: ReorderModalProps) {
               color: 'var(--color-on-secondary)',
             }}
           >
-            {isSaving ? 'Saving…' : 'Save'}
+            {isSaving ? t('reorder.saving') : t('reorder.save')}
           </button>
         </div>
       </div>

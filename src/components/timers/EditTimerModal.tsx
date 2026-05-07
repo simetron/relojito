@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { updateTimer, deleteTimer, archiveTimer } from '@/app/actions/timers'
 import { ALLOWED_COLORS, ALLOWED_ICONS, BRAND_ICONS, type TimerActionResult } from '@/lib/utils/timerConstants'
 import type { Timer } from '@/lib/utils/timerConstants'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 // ─── Color swatch metadata ────────────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ interface EditTimerModalProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) {
+  const { t } = useTranslation()
   const [selectedColor, setSelectedColor] = useState<string>(
     ALLOWED_COLORS.includes(timer.color as (typeof ALLOWED_COLORS)[number])
       ? timer.color
@@ -151,7 +153,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
             className="text-[18px] font-semibold leading-[1.4]"
             style={{ color: 'var(--color-on-surface)' }}
           >
-            Edit Timer
+            {t('timerModal.editTimer')}
           </h2>
           <button
             type="button"
@@ -210,7 +212,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                   className="text-[12px] font-medium tracking-[0.02em] uppercase"
                   style={{ color: 'var(--color-outline)' }}
                 >
-                  Name
+                  {t('timerModal.name')}
                 </label>
                 <span
                   className="text-[12px]"
@@ -247,7 +249,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                 className="text-[12px] font-medium tracking-[0.02em] uppercase"
                 style={{ color: 'var(--color-outline)' }}
               >
-                Color
+                {t('timerModal.color')}
               </label>
               <div className="flex flex-wrap gap-md">
                 {COLOR_SWATCHES.map((swatch) => {
@@ -278,7 +280,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                 className="text-[12px] font-medium tracking-[0.02em] uppercase"
                 style={{ color: 'var(--color-outline)' }}
               >
-                Icon
+                {t('timerModal.icon')}
               </label>
               <div className="grid grid-cols-6 gap-sm">
                 {ALLOWED_ICONS.map((iconName) => {
@@ -319,7 +321,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                 className="flex-1 h-11 rounded-xl text-[14px] font-medium transition-colors"
                 style={{ color: 'var(--color-on-surface-variant)' }}
               >
-                Cancel
+                {t('timerModal.cancel')}
               </button>
               <button
                 type="submit"
@@ -330,7 +332,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                   color: 'var(--color-on-secondary)',
                 }}
               >
-                {isPending ? 'Saving…' : 'Save'}
+                {isPending ? t('timerModal.saving') : t('timerModal.save')}
               </button>
             </div>
             {/* Row 2: Delete + Archive */}
@@ -342,7 +344,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                 style={{ color: 'var(--color-error)' }}
               >
                 <i className="fa-solid fa-trash-can" aria-hidden="true" />
-                Delete
+                {t('timerModal.delete')}
               </button>
               <button
                 type="button"
@@ -351,7 +353,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                 className="flex-1 h-10 rounded-xl text-[13px] font-medium transition-colors active:scale-[0.98] disabled:opacity-50"
                 style={{ color: 'var(--color-on-surface-variant)' }}
               >
-                Archive
+                {t('timerModal.archive')}
               </button>
             </div>
           </div>
@@ -381,15 +383,14 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                 className="text-[18px] font-semibold"
                 style={{ color: 'var(--color-on-surface)' }}
               >
-                Delete &ldquo;{timer.name}&rdquo;?
+                {t('timerModal.deleteTitle').replace('"{name}"', `"${timer.name}"`)}
               </h3>
               <p
                 id="delete-confirm-desc"
                 className="text-[14px] leading-[1.5]"
                 style={{ color: 'var(--color-on-surface-variant)' }}
               >
-                This will permanently delete <strong>{timer.name}</strong> and all its
-                recorded sessions. This cannot be undone.
+                {t('timerModal.deleteDesc').replace(/\{name\}/g, timer.name)}
               </p>
             </div>
 
@@ -403,7 +404,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                   color: 'var(--color-on-surface)',
                 }}
               >
-                Cancel
+                {t('timerModal.cancel')}
               </button>
               <button
                 type="button"
@@ -415,7 +416,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                   color: 'var(--color-on-error)',
                 }}
               >
-                {isDeleting ? 'Deleting…' : 'Delete'}
+                {isDeleting ? t('timerModal.deleting') : t('timerModal.delete')}
               </button>
             </div>
           </div>
@@ -445,14 +446,14 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                 className="text-[18px] font-semibold"
                 style={{ color: 'var(--color-on-surface)' }}
               >
-                Archive &ldquo;{timer.name}&rdquo;?
+                {t('timerModal.archiveTitle').replace('"{name}"', `"${timer.name}"`)}
               </h3>
               <p
                 id="archive-confirm-desc"
                 className="text-[14px] leading-[1.5]"
                 style={{ color: 'var(--color-on-surface-variant)' }}
               >
-                This will hide <strong>{timer.name}</strong> from your timers list. All its recorded sessions will remain visible in <strong>History</strong> and will continue to count in <strong>Stats</strong>. You can restore it at any time.
+                {t('timerModal.archiveDesc').replace(/\{name\}/g, timer.name)}
               </p>
             </div>
 
@@ -479,7 +480,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                   color: 'var(--color-on-surface)',
                 }}
               >
-                Cancel
+                {t('timerModal.cancel')}
               </button>
               <button
                 type="button"
@@ -491,7 +492,7 @@ export default function EditTimerModal({ timer, onClose }: EditTimerModalProps) 
                   color: 'var(--color-on-secondary)',
                 }}
               >
-                {isArchiving ? 'Archiving…' : 'Archive'}
+                {isArchiving ? t('timerModal.archiving') : t('timerModal.archive')}
               </button>
             </div>
           </div>

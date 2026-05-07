@@ -2,16 +2,18 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-const navItems = [
-  { label: 'Timers', icon: 'fa-solid fa-clock', route: '/dashboard' },
-  { label: 'History', icon: 'fa-solid fa-clock-rotate-left', route: '/history' },
-  { label: 'Stats', icon: 'fa-solid fa-chart-simple', route: '/stats' },
-  { label: 'Settings', icon: 'fa-solid fa-gear', route: '/settings' },
-]
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const { t } = useTranslation()
+
+  const navItems = [
+    { label: t('nav.timers'), icon: 'fa-solid fa-clock', route: '/dashboard' },
+    { label: t('nav.history'), icon: 'fa-solid fa-clock-rotate-left', route: '/history' },
+    { label: t('nav.stats'), icon: 'fa-solid fa-chart-simple', route: '/stats' },
+    { label: t('nav.settings'), icon: 'fa-solid fa-gear', route: '/settings' },
+  ]
 
   return (
     <nav
