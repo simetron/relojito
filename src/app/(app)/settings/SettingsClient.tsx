@@ -306,6 +306,7 @@ function LanguageSelector({
     const newLang = e.target.value as Language
     setLang(newLang)
     await saveLanguageAction(newLang)
+    window.location.reload()
   }
 
   // Read current value from localStorage via the hook
@@ -339,159 +340,163 @@ function LanguageSelector({
 
 
 
-const MANUAL_SECTIONS = [
-  {
-    id: 'timers',
-    icon: 'fa-clock',
-    title: 'Timers',
-    content: [
-      {
-        heading: 'Creating a timer',
-        body: 'Tap the dashed "New Timer +" card at the bottom of the Timers screen. Choose a name (up to 32 characters), a color, and an icon. Tap Create to save it.',
-        example: (
-          <div className="rounded-xl p-3 flex items-center gap-3 mt-2" style={{ border: '2px dashed var(--color-outline-variant)' }}>
-            <span className="text-[13px] font-medium" style={{ color: 'var(--color-on-surface-variant)' }}>New Timer +</span>
-          </div>
-        ),
-      },
-      {
-        heading: 'Starting & stopping',
-        body: 'Tap START on any idle timer to begin tracking. The card turns to its color and shows a live counter. Tap STOP to end the session. Sessions shorter than 1 minute are discarded automatically.',
-        example: (
-          <div className="rounded-xl flex items-center gap-3 px-3 py-3 mt-2" style={{ backgroundColor: '#5850EC' }}>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
-              <i className="fa-solid fa-briefcase text-white text-[16px]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-white">Work</p>
-              <p className="text-[18px] font-bold text-white">00:04:32</p>
-            </div>
-            <div className="px-3 py-1.5 rounded-xl text-[11px] font-bold text-white flex-shrink-0" style={{ border: '2px solid rgba(255,255,255,0.8)' }}>STOP</div>
-          </div>
-        ),
-      },
-      {
-        heading: 'Editing a timer',
-        body: 'Tap anywhere on an idle timer card (not the START button) to open the Edit Timer modal. You can change the name, color, and icon, then tap Save.',
-      },
-      {
-        heading: 'Archiving a timer',
-        body: 'In the Edit Timer modal, tap Archive. The timer disappears from the Timers screen but all its sessions remain visible in History and count in Stats. You can restore it at any time from the Reorder screen.',
-      },
-      {
-        heading: 'Deleting a timer',
-        body: 'In the Edit Timer modal, tap Delete. This permanently removes the timer and all its recorded sessions. This action cannot be undone.',
-      },
-      {
-        heading: 'Reordering timers',
-        body: 'Tap the pencil icon (✏️) at the top right of the Timers screen. Use the ↑ and ↓ chevrons to move timers up or down. Tap Save to apply the new order.',
-      },
-    ],
-  },
-  {
-    id: 'history',
-    icon: 'fa-clock-rotate-left',
-    title: 'History',
-    content: [
-      {
-        heading: 'Viewing sessions',
-        body: 'The History screen shows all your completed sessions grouped by day in your local timezone, ordered from most recent to oldest.',
-        example: (
-          <div className="space-y-1.5 mt-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-outline)' }}>Today · 2 sessions</p>
-            {[
-              { name: 'Work', icon: 'briefcase', color: '#5850EC', time: '09:00 – 11:30', dur: '2h 30m' },
-              { name: 'Sport', icon: 'person-running', color: '#10B981', time: '12:00 – 12:45', dur: '45m' },
-            ].map(s => (
-              <div key={s.name} className="rounded-lg p-2.5 flex items-center gap-2" style={{ backgroundColor: 'var(--color-surface-container)', border: '1px solid var(--color-outline-variant)' }}>
-                <div className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0" style={{ backgroundColor: s.color }}>
-                  <i className={`fa-solid fa-${s.icon} text-[11px] text-white`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[12px] font-semibold" style={{ color: 'var(--color-on-surface)' }}>{s.name}</p>
-                  <p className="text-[10px]" style={{ color: 'var(--color-outline)' }}>{s.time}</p>
-                </div>
-                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--color-surface-container-high)', color: 'var(--color-on-surface-variant)' }}>{s.dur}</span>
-              </div>
-            ))}
-          </div>
-        ),
-      },
-      {
-        heading: 'Editing a session',
-        body: 'Tap any session row to open the Edit Entry modal. You can change the activity, date, start time, and end time. Neither start nor end time can be set in the future.',
-      },
-      {
-        heading: 'Adding a manual entry',
-        body: 'Tap the "+" floating button at the bottom right of the History screen. Fill in the activity, date, start time, and end time, then tap Register.',
-      },
-      {
-        heading: 'Deleting a session',
-        body: 'Open a session by tapping it, then tap Delete at the bottom of the Edit Entry modal. Confirm in the dialog that appears.',
-      },
-    ],
-  },
-  {
-    id: 'stats',
-    icon: 'fa-chart-simple',
-    title: 'Stats',
-    content: [
-      {
-        heading: 'Reading the chart',
-        body: 'The donut chart shows the proportion of time spent on each activity. The total time is displayed in the center. Each color corresponds to a timer.',
-        example: (
-          <div className="flex justify-center mt-2">
-            <div className="relative w-24 h-24">
-              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#e7e8e9" strokeWidth="14" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#5850EC" strokeWidth="14" strokeDasharray="143 96" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#10B981" strokeWidth="14" strokeDasharray="57 182" strokeDashoffset="-143" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#F59E0B" strokeWidth="14" strokeDasharray="39 200" strokeDashoffset="-200" />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-[12px] font-bold" style={{ color: 'var(--color-on-surface)' }}>9h 59m</span>
-                <span className="text-[9px]" style={{ color: 'var(--color-outline)' }}>7 days</span>
-              </div>
-            </div>
-          </div>
-        ),
-      },
-      {
-        heading: 'Changing the date range',
-        body: 'Use the "7 days" and "30 days" buttons at the top of the Stats screen to switch between time ranges. The chart and breakdown list update immediately.',
-      },
-      {
-        heading: 'Breakdown list',
-        body: 'Below the chart, each timer shows its total time, percentage of the total, and a proportional progress bar in the timer\'s color.',
-      },
-    ],
-  },
-  {
-    id: 'settings-help',
-    icon: 'fa-gear',
-    title: 'Settings',
-    content: [
-      {
-        heading: 'Changing your password',
-        body: 'In the Account Security section, enter your new password twice and tap Update Password. Passwords must be at least 6 characters.',
-      },
-      {
-        heading: 'Dark mode',
-        body: 'Toggle the Dark Mode switch in the Appearance section. Your preference is saved and syncs across all your devices automatically.',
-      },
-      {
-        heading: 'Time format',
-        body: 'Choose between 12h (e.g. 3:30 PM) and 24h (e.g. 15:30) in the Appearance section. This affects how times are displayed in History. The default is 24h.',
-      },
-      {
-        heading: 'Deleting your account',
-        body: 'In the Danger Zone section, tap Delete Account. Type DELETE to confirm. This permanently removes your account, all timers, and all sessions. This cannot be undone.',
-      },
-    ],
-  },
-]
+type TFn = (key: Parameters<ReturnType<typeof useTranslation>['t']>[0]) => string
 
-function ManualSection({ section }: { section: typeof MANUAL_SECTIONS[number] }) {
+function getManualSections(t: TFn) {
+  return [
+    {
+      id: 'timers',
+      icon: 'fa-clock',
+      title: t('manual.timers.title'),
+      content: [
+        {
+          heading: t('manual.timers.creating.heading'),
+          body: t('manual.timers.creating.body'),
+          example: (
+            <div className="rounded-xl p-3 flex items-center gap-3 mt-2" style={{ border: '2px dashed var(--color-outline-variant)' }}>
+              <span className="text-[13px] font-medium" style={{ color: 'var(--color-on-surface-variant)' }}>New Timer +</span>
+            </div>
+          ),
+        },
+        {
+          heading: t('manual.timers.startStop.heading'),
+          body: t('manual.timers.startStop.body'),
+          example: (
+            <div className="rounded-xl flex items-center gap-3 px-3 py-3 mt-2" style={{ backgroundColor: '#5850EC' }}>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                <i className="fa-solid fa-briefcase text-white text-[16px]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-white">Work</p>
+                <p className="text-[18px] font-bold text-white">00:04:32</p>
+              </div>
+              <div className="px-3 py-1.5 rounded-xl text-[11px] font-bold text-white flex-shrink-0" style={{ border: '2px solid rgba(255,255,255,0.8)' }}>STOP</div>
+            </div>
+          ),
+        },
+        {
+          heading: t('manual.timers.editing.heading'),
+          body: t('manual.timers.editing.body'),
+        },
+        {
+          heading: t('manual.timers.archiving.heading'),
+          body: t('manual.timers.archiving.body'),
+        },
+        {
+          heading: t('manual.timers.deleting.heading'),
+          body: t('manual.timers.deleting.body'),
+        },
+        {
+          heading: t('manual.timers.reordering.heading'),
+          body: t('manual.timers.reordering.body'),
+        },
+      ],
+    },
+    {
+      id: 'history',
+      icon: 'fa-clock-rotate-left',
+      title: t('manual.history.title'),
+      content: [
+        {
+          heading: t('manual.history.viewing.heading'),
+          body: t('manual.history.viewing.body'),
+          example: (
+            <div className="space-y-1.5 mt-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-outline)' }}>Today · 2 sessions</p>
+              {[
+                { name: 'Work', icon: 'briefcase', color: '#5850EC', time: '09:00 – 11:30', dur: '2h 30m' },
+                { name: 'Sport', icon: 'person-running', color: '#10B981', time: '12:00 – 12:45', dur: '45m' },
+              ].map(s => (
+                <div key={s.name} className="rounded-lg p-2.5 flex items-center gap-2" style={{ backgroundColor: 'var(--color-surface-container)', border: '1px solid var(--color-outline-variant)' }}>
+                  <div className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0" style={{ backgroundColor: s.color }}>
+                    <i className={`fa-solid fa-${s.icon} text-[11px] text-white`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-semibold" style={{ color: 'var(--color-on-surface)' }}>{s.name}</p>
+                    <p className="text-[10px]" style={{ color: 'var(--color-outline)' }}>{s.time}</p>
+                  </div>
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--color-surface-container-high)', color: 'var(--color-on-surface-variant)' }}>{s.dur}</span>
+                </div>
+              ))}
+            </div>
+          ),
+        },
+        {
+          heading: t('manual.history.editing.heading'),
+          body: t('manual.history.editing.body'),
+        },
+        {
+          heading: t('manual.history.adding.heading'),
+          body: t('manual.history.adding.body'),
+        },
+        {
+          heading: t('manual.history.deleting.heading'),
+          body: t('manual.history.deleting.body'),
+        },
+      ],
+    },
+    {
+      id: 'stats',
+      icon: 'fa-chart-simple',
+      title: t('manual.stats.title'),
+      content: [
+        {
+          heading: t('manual.stats.reading.heading'),
+          body: t('manual.stats.reading.body'),
+          example: (
+            <div className="flex justify-center mt-2">
+              <div className="relative w-24 h-24">
+                <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="#e7e8e9" strokeWidth="14" />
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="#5850EC" strokeWidth="14" strokeDasharray="143 96" />
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="#10B981" strokeWidth="14" strokeDasharray="57 182" strokeDashoffset="-143" />
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="#F59E0B" strokeWidth="14" strokeDasharray="39 200" strokeDashoffset="-200" />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-[12px] font-bold" style={{ color: 'var(--color-on-surface)' }}>9h 59m</span>
+                  <span className="text-[9px]" style={{ color: 'var(--color-outline)' }}>7 days</span>
+                </div>
+              </div>
+            </div>
+          ),
+        },
+        {
+          heading: t('manual.stats.range.heading'),
+          body: t('manual.stats.range.body'),
+        },
+        {
+          heading: t('manual.stats.breakdown.heading'),
+          body: t('manual.stats.breakdown.body'),
+        },
+      ],
+    },
+    {
+      id: 'settings-help',
+      icon: 'fa-gear',
+      title: t('manual.settings.title'),
+      content: [
+        {
+          heading: t('manual.settings.password.heading'),
+          body: t('manual.settings.password.body'),
+        },
+        {
+          heading: t('manual.settings.darkMode.heading'),
+          body: t('manual.settings.darkMode.body'),
+        },
+        {
+          heading: t('manual.settings.timeFormat.heading'),
+          body: t('manual.settings.timeFormat.body'),
+        },
+        {
+          heading: t('manual.settings.deleteAccount.heading'),
+          body: t('manual.settings.deleteAccount.body'),
+        },
+      ],
+    },
+  ]
+}
+
+function ManualSection({ section }: { section: ReturnType<typeof getManualSections>[number] }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -538,10 +543,10 @@ function ManualSection({ section }: { section: typeof MANUAL_SECTIONS[number] })
   )
 }
 
-function UserManual() {
+function UserManual({ t }: { t: TFn }) {
   return (
     <div className="space-y-sm">
-      {MANUAL_SECTIONS.map((section) => (
+      {getManualSections(t).map((section) => (
         <ManualSection key={section.id} section={section} />
       ))}
     </div>
@@ -612,8 +617,7 @@ function DeleteAccountSection({ t }: { t: (key: Parameters<ReturnType<typeof use
               {t('settings.deleteAccountTitle')}
             </h3>
             <p className="text-[14px] text-on-surface-variant mt-xs">
-              This will permanently delete your account and all your timers and
-              sessions. This cannot be undone.
+              {t('settings.deleteAccountBody')}
             </p>
           </div>
 
@@ -750,7 +754,7 @@ export default function SettingsClient({ email, initialTheme, initialTimeFormat,
         {/* User Manual section */}
         <section>
           <SectionHeading>{t('settings.userManual')}</SectionHeading>
-          <UserManual />
+          <UserManual t={t} />
         </section>
 
         {/* Danger Zone section */}

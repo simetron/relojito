@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { registerAction } from './actions'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 export default function RegisterPage() {
+  const { t } = useTranslation()
   const [error, setError] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
 
@@ -16,7 +18,6 @@ export default function RegisterPage() {
       if (result?.error) {
         setError(result.error)
       }
-      // On success, the server action redirects — no client-side action needed
     } catch {
       setError('An unexpected error occurred. Please try again.')
     } finally {
@@ -37,7 +38,7 @@ export default function RegisterPage() {
               Relojito
             </h1>
             <p className="text-[14px] leading-[1.5] text-on-surface-variant">
-              Focus on what matters, one second at a time.
+              {t('auth.tagline') as string}
             </p>
           </div>
 
@@ -55,7 +56,7 @@ export default function RegisterPage() {
                   className="text-[12px] leading-[1] tracking-[0.02em] font-medium text-on-surface-variant block px-1"
                   htmlFor="email"
                 >
-                  Email Address
+                  {t('auth.emailAddress') as string}
                 </label>
                 <input
                   className="w-full h-11 px-md rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
@@ -72,7 +73,7 @@ export default function RegisterPage() {
                   className="text-[12px] leading-[1] tracking-[0.02em] font-medium text-on-surface-variant block px-1"
                   htmlFor="password"
                 >
-                  Password
+                  {t('auth.password') as string}
                 </label>
                 <input
                   className="w-full h-11 px-md rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
@@ -84,7 +85,7 @@ export default function RegisterPage() {
                   minLength={6}
                 />
                 <p className="text-[12px] text-on-surface-variant px-1">
-                  Must be at least 6 characters
+                  {t('auth.passwordMinLength') as string}
                 </p>
               </div>
 
@@ -93,7 +94,7 @@ export default function RegisterPage() {
                 disabled={isPending}
                 className="w-full h-11 bg-primary text-on-primary text-[14px] font-semibold rounded-lg border-t border-white/10 hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-sm mt-lg disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isPending ? 'Creating account…' : 'Sign Up'}
+                {isPending ? t('auth.creatingAccount') as string : t('auth.signUpButton') as string}
               </button>
             </form>
           </div>
@@ -101,30 +102,23 @@ export default function RegisterPage() {
           {/* Sign in link */}
           <div className="mt-lg text-center">
             <p className="text-[14px] text-on-surface-variant">
-              Already have an account?{' '}
+              {t('auth.alreadyAccount') as string}{' '}
               <Link
                 href="/login"
                 className="font-semibold hover:underline decoration-primary underline-offset-4 text-primary"
               >
-                Sign In
+                {t('auth.signInButton') as string}
               </Link>
             </p>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="w-full max-w-screen-2xl mx-auto px-gutter py-lg flex justify-between items-center text-[12px] leading-[1] tracking-[0.02em] font-medium text-on-surface-variant">
         <div className="flex gap-lg">
-          <a href="#" className="transition-colors hover:text-on-surface">
-            Privacy
-          </a>
-          <a href="#" className="transition-colors hover:text-on-surface">
-            Terms
-          </a>
-          <a href="#" className="transition-colors hover:text-on-surface">
-            Help
-          </a>
+          <a href="#" className="transition-colors hover:text-on-surface">Privacy</a>
+          <a href="#" className="transition-colors hover:text-on-surface">Terms</a>
+          <a href="#" className="transition-colors hover:text-on-surface">Help</a>
         </div>
         <div>© 2026 Relojito</div>
       </footer>

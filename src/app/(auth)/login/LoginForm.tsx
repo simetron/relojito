@@ -1,12 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { loginAction, forgotPasswordAction } from './actions'
 import { useTranslation } from '@/lib/i18n/useTranslation'
 
 export function LoginForm() {
-  const router = useRouter()
   const { t } = useTranslation()
   const [error, setError] = useState<string | null>(null)
   const [forgotMessage, setForgotMessage] = useState<string | null>(null)
@@ -22,9 +20,7 @@ export function LoginForm() {
       if (result?.error) {
         setError(result.error)
       }
-      // On success, the server action redirects — no client-side action needed
     } catch (e) {
-      // Surface the actual error message in production for easier debugging
       const msg = e instanceof Error ? e.message : String(e)
       setError(`Something went wrong: ${msg}`)
     } finally {
@@ -43,10 +39,7 @@ export function LoginForm() {
       if (result?.error) {
         setError(result.error)
       } else {
-        setForgotMessage(
-          result?.message ??
-            'If an account exists for that email, a password reset link has been sent.'
-        )
+        setForgotMessage(result?.message ?? t('auth.resetSent') as string)
         setShowForgot(false)
       }
     } catch {
@@ -61,10 +54,10 @@ export function LoginForm() {
       <form onSubmit={handleForgotPassword} className="space-y-md">
         <div>
           <h2 className="text-[18px] leading-[1.4] tracking-[-0.01em] font-medium text-on-surface mb-xs">
-            {t('auth.resetPassword')}
+            {t('auth.resetPassword') as string}
           </h2>
           <p className="text-[14px] text-on-surface-variant">
-            {t('auth.resetPasswordDesc')}
+            {t('auth.resetPasswordDesc') as string}
           </p>
         </div>
 
@@ -79,7 +72,7 @@ export function LoginForm() {
             className="text-[12px] leading-[1] tracking-[0.02em] font-medium text-on-surface-variant block px-1"
             htmlFor="forgot-email"
           >
-            {t('auth.emailAddress')}
+            {t('auth.emailAddress') as string}
           </label>
           <input
             className="w-full h-11 px-md rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
@@ -98,18 +91,15 @@ export function LoginForm() {
           disabled={isPending}
           className="w-full h-11 bg-primary text-on-primary text-[14px] font-semibold rounded-lg border-t border-white/10 hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-sm mt-lg disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {isPending ? 'Sending…' : 'Send Reset Link'}
+          {isPending ? t('auth.sending') as string : t('auth.sendResetLink') as string}
         </button>
 
         <button
           type="button"
-          onClick={() => {
-            setShowForgot(false)
-            setError(null)
-          }}
+          onClick={() => { setShowForgot(false); setError(null) }}
           className="w-full text-center text-[14px] text-on-surface-variant hover:text-on-surface transition-colors"
         >
-          Back to Sign In
+          {t('auth.backToSignIn') as string}
         </button>
       </form>
     )
@@ -135,7 +125,7 @@ export function LoginForm() {
             className="text-[12px] leading-[1] tracking-[0.02em] font-medium text-on-surface-variant block px-1"
             htmlFor="email"
           >
-            Email Address
+            {t('auth.emailAddress') as string}
           </label>
           <input
             className="w-full h-11 px-md rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
@@ -153,17 +143,14 @@ export function LoginForm() {
               className="text-[12px] leading-[1] tracking-[0.02em] font-medium text-on-surface-variant block"
               htmlFor="password"
             >
-              Password
+              {t('auth.password') as string}
             </label>
             <button
               type="button"
-              onClick={() => {
-                setShowForgot(true)
-                setError(null)
-              }}
+              onClick={() => { setShowForgot(true); setError(null) }}
               className="text-[12px] leading-[1] tracking-[0.02em] font-medium text-secondary hover:text-secondary/80 transition-colors"
             >
-              Forgot Password?
+              {t('auth.forgotPassword') as string}
             </button>
           </div>
           <input
@@ -181,7 +168,7 @@ export function LoginForm() {
           disabled={isPending}
           className="w-full h-11 bg-primary text-on-primary text-[14px] font-semibold rounded-lg border-t border-white/10 hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-sm mt-lg disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {isPending ? 'Signing in…' : 'Sign In'}
+          {isPending ? t('auth.signingIn') as string : t('auth.signInButton') as string}
         </button>
       </form>
     </>

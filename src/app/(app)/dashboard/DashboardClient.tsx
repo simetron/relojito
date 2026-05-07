@@ -149,7 +149,7 @@ export default function DashboardClient({
           </p>
         </div>
 
-        {(timers.length > 1 || allTimers.some(t => !t.is_active)) && (
+        {(timers.length > 1 || allTimers.some(timer => !timer.is_active)) && (
           <button
             type="button"
             onClick={() => setShowReorderModal(true)}

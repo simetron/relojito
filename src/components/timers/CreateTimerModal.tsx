@@ -134,7 +134,7 @@ export default function CreateTimerModal({ onClose }: CreateTimerModalProps) {
             className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg"
             style={{ backgroundColor: selectedColor }}
           >
-            <i className={`fa-solid fa-${selectedIcon} text-[32px] text-white`} aria-hidden="true" />
+            <i className={`${BRAND_ICONS.has(selectedIcon) ? 'fa-brands' : 'fa-solid'} fa-${selectedIcon} text-[32px] text-white`} aria-hidden="true" />
           </div>
         </div>
 

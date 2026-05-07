@@ -45,15 +45,17 @@ export function useLanguage(): [Language, (lang: Language) => void] {
 export function useTranslation() {
   const [lang] = useLanguage()
 
-  function t(key: TranslationKey): string | ((...args: unknown[]) => string) {
+  function t(key: TranslationKey): string {
     const dict = translations[lang] as Record<string, unknown>
     const fallback = translations.en as Record<string, unknown>
     const value = dict[key] ?? fallback[key]
-    if (typeof value === 'function') return value as (...args: unknown[]) => string
+    if (typeof value === 'function') return value as unknown as string
     return (value as string) ?? key
   }
 
-  return { t, lang }
+  const locale = lang === 'es' ? 'es-ES' : 'en-US'
+
+  return { t, lang, locale }
 }
 
 // ─── getLanguage (non-hook, for server-safe reads) ────────────────────────────

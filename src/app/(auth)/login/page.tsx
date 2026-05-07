@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { LoginForm } from './LoginForm'
+import LoginPageText from './LoginPageText'
 
 export default async function LoginPage({
   searchParams,
@@ -13,7 +14,6 @@ export default async function LoginPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Redirect authenticated users to dashboard
   if (user) {
     redirect('/dashboard')
   }
@@ -34,9 +34,7 @@ export default async function LoginPage({
             <h1 className="text-[32px] leading-[1.2] tracking-[-0.02em] font-semibold mb-xs text-on-surface">
               Relojito
             </h1>
-            <p className="text-[14px] leading-[1.5] text-on-surface-variant">
-              Focus on what matters, one second at a time.
-            </p>
+            <LoginPageText type="tagline" />
           </div>
 
           {/* Login form card */}
@@ -46,52 +44,26 @@ export default async function LoginPage({
                 <p className="text-[14px] text-on-surface">{forgotMessage}</p>
               </div>
             )}
-
             {message && (
               <div className="mb-md p-md rounded-lg bg-error-container border border-error">
                 <p className="text-[14px] text-on-error-container">{message}</p>
               </div>
             )}
-
             <LoginForm />
           </div>
 
           {/* Sign up link */}
           <div className="mt-lg text-center">
-            <p className="text-[14px] text-on-surface-variant">
-              Don&apos;t have an account?{' '}
-              <Link
-                href="/register"
-                className="font-semibold hover:underline decoration-primary underline-offset-4 text-primary"
-              >
-                Sign Up
-              </Link>
-            </p>
+            <LoginPageText type="signupLink" />
           </div>
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="w-full max-w-screen-2xl mx-auto px-gutter py-lg flex justify-between items-center text-[12px] leading-[1] tracking-[0.02em] font-medium text-on-surface-variant">
         <div className="flex gap-lg">
-          <a
-            href="#"
-            className="transition-colors hover:text-on-surface"
-          >
-            Privacy
-          </a>
-          <a
-            href="#"
-            className="transition-colors hover:text-on-surface"
-          >
-            Terms
-          </a>
-          <a
-            href="#"
-            className="transition-colors hover:text-on-surface"
-          >
-            Help
-          </a>
+          <a href="#" className="transition-colors hover:text-on-surface">Privacy</a>
+          <a href="#" className="transition-colors hover:text-on-surface">Terms</a>
+          <a href="#" className="transition-colors hover:text-on-surface">Help</a>
         </div>
         <div>© 2026 Relojito</div>
       </footer>

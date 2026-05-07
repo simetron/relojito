@@ -139,7 +139,7 @@ export default function StatsClient({
           >
             <i className="fa-solid fa-clock text-[40px] opacity-30" aria-hidden="true" />
             <p className="text-[14px] text-center">
-              {t('stats.empty').replace('{days}', String(rangeDays))}
+              {(t('stats.empty') as unknown as (n: number) => string)(rangeDays)}
             </p>
           </div>
         )}
