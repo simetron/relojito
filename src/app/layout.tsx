@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "../styles/globals.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -12,7 +12,18 @@ export const metadata: Metadata = {
   description: "Minimalist time tracking app",
   icons: {
     icon: "/icon.svg",
+    apple: "/apple-touch-icon.png",
   },
+  appleWebApp: {
+    capable: true,
+    title: "Relojito",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#3e4c67",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
